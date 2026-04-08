@@ -1,4 +1,4 @@
-//Before running, create a text file called "account" in the project folder 
+//Before running, create a txt file called "accounts" in the project folder 
 
 import java.io.*;
 import java.util.*;
