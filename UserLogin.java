@@ -1,3 +1,5 @@
+//Before running, create a text file called "account" in the project folder 
+
 import java.io.*;
 import java.util.*;
 
