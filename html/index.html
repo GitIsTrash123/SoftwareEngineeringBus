@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Software Engineering Bus</title>
+  <link rel="stylesheet" href="../style/style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <section class="login-shell" id="loginSection">
+  <main class="card login-card" aria-live="polite">
+
+    <!-- DISCLAIMER -->
+    <div id="disclaimerView">
+      <h1>Project Disclaimer</h1>
+      <p class="subtitle login-subtitle">
+        This cross-country bus management system is a fictional college project created for educational purposes only.
+        It does not represent a real transportation service, booking platform, or dispatching system.
+      </p>
+      <button id="proceedBtn" type="button">OK PROCEED</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginView" class="hidden">
+      <h1>User Login</h1>
+      <p class="subtitle login-subtitle">Sign in to continue.</p>
+
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" maxlength="15" autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" maxlength="15" autocomplete="current-password" />
+      </div>
+
+      <div class="actions">
+        <button class="login" id="loginBtn" type="button">Log In</button>
+        <button class="create" id="createBtn" type="button">Create Account</button>
+      </div>
+
+      <button class="exit" id="exitBtn" type="button">Exit</button>
+      <div class="message" id="loginMessage"></div>
+    </div>
+
+    <!-- CREATE ACCOUNT FORM -->
+    <div id="createAccountView" class="hidden">
+      <h1>Create Account</h1>
+      <p class="subtitle login-subtitle">Create your account, then return to login.</p>
+
+      <div class="name-row">
+        <div class="field">
+          <label for="firstName">First Name</label>
+          <input id="firstName" maxlength="30" autocomplete="given-name" />
+        </div>
+        <div class="field">
+          <label for="lastName">Last Name</label>
+          <input id="lastName" maxlength="30" autocomplete="family-name" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="createEmail">Email</label>
+        <input id="createEmail" type="email" maxlength="120" autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="createUsername">Username</label>
+        <input id="createUsername" maxlength="15" autocomplete="username" />
+      </div>
+
+      <div class="field">
+        <label for="createPassword">Password</label>
+        <input id="createPassword" type="password" maxlength="15" autocomplete="new-password" />
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword">Confirm Password</label>
+        <input id="confirmPassword" type="password" maxlength="15" autocomplete="new-password" />
+      </div>
+
+      <button class="create" id="createAccountBtn" type="button">Create Account</button>
+      <button class="back" id="backToLoginBtn" type="button">Back to Login</button>
+      <div class="message" id="createMessage"></div>
+    </div>
+
+  </main>
+</section>
+
+  <section class="app-shell hidden" id="appSection">
+    <div class="container">
+      <div class="topbar card">
+        <div>
+          <h1>Software Engineering Bus System</h1>
+          <p class="subtitle">Plan trips, manage buses, and update station data after login.</p>
+        </div>
+        <div class="topbar-actions">
+          <span class="session-user">Signed in as <strong id="currentUser">Guest</strong></span>
+          <button id="logoutBtn" class="logout" type="button">Log Out</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div id="adminControls" style="display: contents;">
+        <section class="card">
+          <h2>Add Bus</h2>
+          <label for="busMake">Make</label>
+          <input id="busMake" type="text" />
+
+          <label for="busModel">Model</label>
+          <input id="busModel" type="text" />
+
+          <label for="busType">Type</label>
+          <select id="busType">
+            <option value="City Bus">City Bus</option>
+            <option value="Long Distance Bus">Long Distance Bus</option>
+          </select>
+
+          <label for="busFuelCapacity">Fuel Capacity (gal)</label>
+          <input id="busFuelCapacity" type="number" min="1" step="1" />
+
+          <label for="busMpg">MPG</label>
+          <input id="busMpg" type="number" min="0.1" step="0.1" />
+
+          <label for="busSpeed">Speed (mph)</label>
+          <input id="busSpeed" type="number" min="1" step="1" />
+
+          <label for="busFuelType">Fuel Type</label>
+          <select id="busFuelType">
+            <option value="unleaded">Unleaded</option>
+            <option value="diesel">Diesel</option>
+          </select>
+
+          <button id="addBusBtn" type="button">Add Bus</button>
+          <div class="output" id="busOutput">No buses added yet.</div>
+        </section>
+
+        <section class="card">
+          <h2>Add Bus Station</h2>
+          <label for="stationName">Station Name</label>
+          <input id="stationName" type="text" />
+
+          <label for="stationLatitude">Latitude</label>
+          <input id="stationLatitude" type="number" min="-90" max="90" step="0.01" />
+
+          <label for="stationLongitude">Longitude</label>
+          <input id="stationLongitude" type="number" min="-180" max="180" step="0.01" />
+
+          <button id="addStationBtn" type="button">Add Station</button>
+          <div class="output" id="stationOutput">No stations added yet.</div>
+        </section>
+
+        <section class="card">
+          <h2>Add Fuel Station</h2>
+          <label for="fuelStationName">Fuel Station Name</label>
+          <input id="fuelStationName" type="text" />
+
+          <label for="fuelStationLatitude">Latitude</label>
+          <input id="fuelStationLatitude" type="number" min="-90" max="90" step="0.01" />
+
+          <label for="fuelStationLongitude">Longitude</label>
+          <input id="fuelStationLongitude" type="number" min="-180" max="180" step="0.01" />
+
+          <label for="fuelGrade">Fuel Grade</label>
+          <select id="fuelGrade">
+            <option value="unleaded">Unleaded</option>
+            <option value="diesel">Diesel</option>
+          </select>
+
+          <button id="addFuelStationBtn" type="button">Add Fuel Station</button>
+          <div class="output" id="fuelOutput">No fuel stations added yet.</div>
+        </section>
+        </div>
+
+        <section class="card">
+          <h2>Create Travel Plan</h2>
+          <label for="travelStart">Starting Point</label>
+          <select id="travelStart"></select>
+
+          <label for="travelDestination">Destination</label>
+          <select id="travelDestination"></select>
+
+          <div class="output" id="autoBusOutput">Bus will be selected automatically based on trip distance.</div>
+
+          <div class="output" id="autoFuelOutput">Fuel stops will be added automatically when needed.</div>
+
+          <button id="createTravelPlanBtn" type="button">Create Travel Plan</button>
+          <div class="output" id="travelOutput">Add at least one bus and two stations to create a plan.</div>
+        </section>
+
+        <section class="card">
+  <h2>Saved Travel Plans</h2>
+  <div class="output" id="savedPlansOutput">Log in to view saved travel plans.</div>
+</section>
+
+        <section class="card card--full">
+          <h2>Map &amp; Route</h2>
+          <label for="routeMode">Route Mode</label>
+          <select id="routeMode">
+            <option value="straight">Straight Route (coordinate line)</option>
+            <option value="road">Road Route (OSRM, requires internet)</option>
+          </select>
+          <div id="map"></div>
+          <div class="output" id="mapOutput">Map ready. Create a travel plan to draw a route.</div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <script type="module">
+    import Bus from "../Bus.js";
+    import BusStation from "../BusStation.js";
+    import FuelStation from "../FuelStation.js";
+    import TravelPlan from "../TravelPlan.js";
+    import UserLogin from "../UserLogin.js";
+
+    const auth = new UserLogin();
+
+    const loginSection = document.getElementById("loginSection");
+    const disclaimerView = document.getElementById("disclaimerView");
+    const loginView = document.getElementById("loginView");
+    const createAccountView = document.getElementById("createAccountView");
+    const appSection = document.getElementById("appSection");
+    const currentUser = document.getElementById("currentUser");
+    const adminControls = document.getElementById("adminControls");
+    const proceedBtn = document.getElementById("proceedBtn");
+    const loginBtn = document.getElementById("loginBtn");
+    const createBtn = document.getElementById("createBtn");
+    const createAccountBtn = document.getElementById("createAccountBtn");
+    const savedPlansOutput = document.getElementById("savedPlansOutput");
+    const backToLoginBtn = document.getElementById("backToLoginBtn");
+    const exitBtn = document.getElementById("exitBtn");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const message = document.getElementById("loginMessage");
+    const firstNameInput = document.getElementById("firstName");
+    const lastNameInput = document.getElementById("lastName");
+    const createEmailInput = document.getElementById("createEmail");
+    const createUsernameInput = document.getElementById("createUsername");
+    const createPasswordInput = document.getElementById("createPassword");
+    const confirmPasswordInput = document.getElementById("confirmPassword");
+    const createMessage = document.getElementById("createMessage");
+
+    const busList = [];
+    const stationList = [];
+    const fuelStationList = [];
+
+    // --- Seeded buses (representative real-world models; specs are representative) ---
+    [
+      new Bus("New Flyer", "Xcelsior",  "City Bus",          100,  4.2, 55, "diesel"),
+      new Bus("Gillig",    "Advantage", "City Bus",           90,  4.0, 55, "diesel"),
+      new Bus("Nova Bus",  "LFX",       "City Bus",          110,  4.5, 55, "diesel"),
+      new Bus("Orion",     "VII NG",    "City Bus",           80,  3.8, 50, "unleaded"),
+      new Bus("MCI",       "D45CRT LE", "Long Distance Bus", 200,  6.5, 75, "diesel"),
+      new Bus("Prevost",   "H3-45",     "Long Distance Bus", 240,  6.0, 75, "diesel"),
+      new Bus("Van Hool",  "CX45",      "Long Distance Bus", 200,  6.8, 75, "diesel"),
+      new Bus("Temsa",     "TS 45",     "Long Distance Bus", 180,  7.0, 73, "diesel"),
+      new Bus("Setra",     "S 417 HDH", "Long Distance Bus", 207,  6.8, 75, "diesel"),
+      new Bus("MCI",       "J4500",     "Long Distance Bus", 195,  7.2, 76, "diesel"),
+    ].forEach(b => b.addBus(busList));
+
+    // --- Seeded bus stations (major metro areas with realistic station-style names) ---
+    [
+      new BusStation("Miami Intermodal Center", "Miami", "FL", 25.7959, -80.2796),
+      new BusStation("Golden Glades Multimodal Facility", "Miami", "FL", 25.9125, -80.2028),
+      new BusStation("Downtown Miami Station", "Miami", "FL", 25.7743, -80.1937),
+      new BusStation("Atlanta Bus Station", "Atlanta", "GA", 33.7526, -84.3923),
+      new BusStation("Downtown Civic Center", "Atlanta", "GA", 33.7666, -84.3877),
+      new BusStation("MARTA Five Points Hub", "Atlanta", "GA", 33.7547, -84.3906),
+      new BusStation("Port Authority Bus Terminal", "New York", "NY", 40.7569, -73.9903),
+      new BusStation("George Washington Bridge Bus Station", "New York", "NY", 40.8488, -73.9375),
+      new BusStation("Jamaica Bus Connection", "New York", "NY", 40.7028, -73.7895),
+      new BusStation("Chicago Bus Station", "Chicago", "IL", 41.8761, -87.6388),
+      new BusStation("Union Station Coach Terminal", "Chicago", "IL", 41.8793, -87.6413),
+      new BusStation("95th Street Transit Hub", "Chicago", "IL", 41.7218, -87.6244),
+      new BusStation("Charlotte Gateway Station", "Charlotte", "NC", 35.2350, -80.8458),
+      new BusStation("Charlotte Transportation Center", "Charlotte", "NC", 35.2276, -80.8430),
+      new BusStation("Northlake Park and Ride", "Charlotte", "NC", 35.3523, -80.8512),
+      new BusStation("Dallas Greyhound Terminal", "Dallas", "TX", 32.7757, -96.8061),
+      new BusStation("Downtown Dallas Union Station", "Dallas", "TX", 32.7778, -96.8096),
+      new BusStation("North Dallas Transit Center", "Dallas", "TX", 32.9241, -96.7611),
+      new BusStation("Houston Bus Station", "Houston", "TX", 29.7498, -95.3668),
+      new BusStation("Downtown Transit Center", "Houston", "TX", 29.7601, -95.3697),
+      new BusStation("Northwest Station", "Houston", "TX", 29.8127, -95.4952),
+      new BusStation("Denver Union Station Bus Concourse", "Denver", "CO", 39.7527, -105.0008),
+      new BusStation("Denver Regional Hub", "Denver", "CO", 39.7407, -104.9923),
+      new BusStation("Federal Center Transit Station", "Denver", "CO", 39.7207, -105.1180),
+      new BusStation("Los Angeles Union Station", "Los Angeles", "CA", 34.0568, -118.2373),
+      new BusStation("Patsaouras Transit Plaza", "Los Angeles", "CA", 34.0547, -118.2332),
+      new BusStation("North Hollywood Station", "Los Angeles", "CA", 34.1683, -118.3768),
+      new BusStation("Seattle Bus Station", "Seattle", "WA", 47.5975, -122.3286),
+      new BusStation("King Street Transit Hub", "Seattle", "WA", 47.5992, -122.3312),
+      new BusStation("Northgate Transit Center", "Seattle", "WA", 47.7052, -122.3281),
+      new BusStation("South Station Bus Terminal", "Boston", "MA", 42.3522, -71.0552),
+      new BusStation("Washington Union Station", "Washington", "DC", 38.8971, -77.0064),
+      new BusStation("Nashville Bus Station", "Nashville", "TN", 36.1602, -86.7810),
+      new BusStation("New Orleans Bus Terminal", "New Orleans", "LA", 29.9476, -90.0782),
+      new BusStation("Phoenix Downtown Station", "Phoenix", "AZ", 33.4505, -112.0738),
+      new BusStation("Las Vegas South Strip Terminal", "Las Vegas", "NV", 36.0550, -115.1710),
+    ].forEach((station) => station.addStation(stationList));
+
+    // --- Seeded fuel stations (travel-center style names along major corridors) ---
+    [
+      new FuelStation("Pilot Travel Center", "Jacksonville", "FL", 30.3322, -81.6556, "diesel"),
+      new FuelStation("Love's Travel Stop", "Lake City", "FL", 30.1900, -82.6393, "diesel"),
+      new FuelStation("TA Travel Center", "Cordele", "GA", 31.9635, -83.7824, "diesel"),
+      new FuelStation("Petro Travel Center", "Atlanta", "GA", 33.5979, -84.2213, "diesel"),
+      new FuelStation("Pilot Travel Center", "Charlotte", "NC", 35.2877, -80.7680, "diesel"),
+      new FuelStation("Love's Travel Stop", "Roanoke", "VA", 37.2710, -79.9414, "diesel"),
+      new FuelStation("TA Travel Center", "Baltimore", "MD", 39.2904, -76.6122, "diesel"),
+      new FuelStation("Pilot Travel Center", "Richmond", "VA", 37.5407, -77.4360, "diesel"),
+      new FuelStation("Love's Travel Stop", "Nashville", "TN", 36.0685, -86.5186, "diesel"),
+      new FuelStation("TA Travel Center", "Memphis", "TN", 35.1495, -90.0490, "diesel"),
+      new FuelStation("Petro Travel Center", "Effingham", "IL", 39.1200, -88.5434, "diesel"),
+      new FuelStation("Pilot Travel Center", "Joliet", "IL", 41.5866, -88.0183, "diesel"),
+      new FuelStation("Love's Travel Stop", "Dallas", "TX", 32.6278, -96.8937, "diesel"),
+      new FuelStation("Pilot Travel Center", "Houston", "TX", 29.6856, -95.2874, "diesel"),
+      new FuelStation("TA Travel Center", "Oklahoma City", "OK", 35.4676, -97.5164, "diesel"),
+      new FuelStation("TA Travel Center", "Amarillo", "TX", 35.2220, -101.8313, "diesel"),
+      new FuelStation("Petro Travel Center", "Albuquerque", "NM", 35.0519, -106.7129, "diesel"),
+      new FuelStation("Love's Travel Stop", "Flagstaff", "AZ", 35.1983, -111.6513, "diesel"),
+      new FuelStation("Pilot Travel Center", "Las Vegas", "NV", 36.0881, -115.0583, "diesel"),
+      new FuelStation("TA Travel Center", "Barstow", "CA", 34.8958, -117.0178, "diesel"),
+      new FuelStation("Petro Travel Center", "Salt Lake City", "UT", 40.6697, -111.9678, "diesel"),
+      new FuelStation("Love's Travel Stop", "Kansas City", "MO", 39.1488, -94.5275, "diesel"),
+      new FuelStation("TA Travel Center", "Portland", "OR", 45.5376, -122.8742, "diesel"),
+      new FuelStation("Pilot Travel Center", "Tacoma", "WA", 47.2529, -122.4443, "diesel"),
+    ].forEach((station) => fuelStationList.push(station));
+
+    const busOutput = document.getElementById("busOutput");
+    const stationOutput = document.getElementById("stationOutput");
+    const fuelOutput = document.getElementById("fuelOutput");
+    const autoBusOutput = document.getElementById("autoBusOutput");
+    const autoFuelOutput = document.getElementById("autoFuelOutput");
+    const travelOutput = document.getElementById("travelOutput");
+    const mapOutput = document.getElementById("mapOutput");
+    const routeModeSelect = document.getElementById("routeMode");
+
+    const travelStartSelect = document.getElementById("travelStart");
+    const travelDestinationSelect = document.getElementById("travelDestination");
+
+    const showMessage = (text, kind = "") => {
+      message.textContent = text;
+      message.className = kind ? `message ${kind}` : "message";
+    };
+
+    const showCreateMessage = (text, kind = "") => {
+      createMessage.textContent = text;
+      createMessage.className = kind ? `message ${kind}` : "message";
+    };
+
+    const clearLoginInputs = () => {
+      usernameInput.value = "";
+      passwordInput.value = "";
+    };
+
+    const clearCreateInputs = () => {
+      firstNameInput.value = "";
+      lastNameInput.value = "";
+      createEmailInput.value = "";
+      createUsernameInput.value = "";
+      createPasswordInput.value = "";
+      confirmPasswordInput.value = "";
+    };
+
+    const showDisclaimer = () => {
+      disclaimerView.classList.remove("hidden");
+      loginView.classList.add("hidden");
+      createAccountView.classList.add("hidden");
+      showMessage("");
+      showCreateMessage("");
+    };
+
+    const showLoginForm = () => {
+      disclaimerView.classList.add("hidden");
+      loginView.classList.remove("hidden");
+      createAccountView.classList.add("hidden");
+      showCreateMessage("");
+      usernameInput.focus();
+    };
+
+    const showCreateAccountForm = () => {
+      disclaimerView.classList.add("hidden");
+      loginView.classList.add("hidden");
+      createAccountView.classList.remove("hidden");
+      showMessage("");
+      firstNameInput.focus();
+    };
+
+ const syncAuthUI = () => {
+  const role = auth.getCurrentRole() || "user";
+  const loggedInUser = auth.getCurrentUser() || "Guest";
+
+  if (auth.isAuthenticated()) {
+    currentUser.textContent = loggedInUser;
+    loginSection.classList.add("hidden");
+    appSection.classList.remove("hidden");
+
+    if (adminControls) {
+      adminControls.style.display = role === "admin" ? "contents" : "none";
+    }
+
+    renderSavedPlans();
+
+    if (map) {
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    }
+
+    return;
+  }
+
+  currentUser.textContent = "Guest";
+  appSection.classList.add("hidden");
+  loginSection.classList.remove("hidden");
+
+  if (adminControls) {
+    adminControls.style.display = "contents";
+  }
+
+  if (savedPlansOutput) {
+    savedPlansOutput.textContent = "Log in to view saved travel plans.";
+  }
+
+  showDisclaimer();
+};
+
+    const renderSelectOptions = (select, items, formatter, placeholder) => {
+      const previousValue = select.value;
+      select.innerHTML = "";
+
+      if (placeholder) {
+        const placeholderOption = document.createElement("option");
+        placeholderOption.value = "";
+        placeholderOption.textContent = placeholder;
+        select.appendChild(placeholderOption);
+      }
+
+      items.forEach((item, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = formatter(item);
+        select.appendChild(option);
+      });
+
+      if (previousValue && [...select.options].some((option) => option.value === previousValue)) {
+        select.value = previousValue;
+      }
+    };
+
+    const formatStationLabel = (station) => {
+      if (station.city) {
+        return `${station.city} — ${station.name}`;
+      }
+      return station.name;
+    };
+
+    const formatFuelStationLabel = (station) => {
+      const cityPrefix = station.city ? `${station.city} — ` : "";
+      return `${cityPrefix}${station.name}`;
+    };
+
+    const formatStationDetails = (station) => {
+      if (station.city && station.state) {
+        return `${station.city} — ${station.name}, ${station.state}`;
+      }
+      return station.name;
+    };
+
+    const renderBuses = () => {
+      busOutput.textContent = busList.length
+        ? busList.map((bus, index) => `${index + 1}. ${bus.displayBusInfo()}`).join("\n")
+        : "No buses added yet.";
+    };
+
+    const renderStations = () => {
+      stationOutput.textContent = stationList.length
+        ? stationList.map((station, index) => `${index + 1}. ${station.displayStationInfo()}`).join("\n")
+        : "No stations added yet.";
+
+      renderSelectOptions(
+        travelStartSelect,
+        stationList,
+        formatStationLabel,
+        stationList.length ? "Select a starting point" : "Add stations first"
+      );
+
+      renderSelectOptions(
+        travelDestinationSelect,
+        stationList,
+        formatStationLabel,
+        stationList.length ? "Select a destination" : "Add stations first"
+      );
+      renderMapMarkers();
+    };
+
+    const renderFuelStations = () => {
+      fuelOutput.textContent = fuelStationList.length
+        ? fuelStationList.map((station, index) => `${index + 1}. ${station.displayFuelStationInfo()}`).join("\n")
+        : "No fuel stations added yet.";
+      renderMapMarkers();
+    };
+
+    function haversineMiles(pointA, pointB) {
+      const toRad = (degrees) => degrees * (Math.PI / 180);
+      const earthRadiusMiles = 3958.8;
+      const lat1 = toRad(pointA.latitude);
+      const lat2 = toRad(pointB.latitude);
+      const dLat = toRad(pointB.latitude - pointA.latitude);
+      const dLon = toRad(pointB.longitude - pointA.longitude);
+
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1) * Math.cos(lat2) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+      return earthRadiusMiles * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function interpolatePoint(pointA, pointB, fraction) {
+      return {
+        latitude: pointA.latitude + (pointB.latitude - pointA.latitude) * fraction,
+        longitude: pointA.longitude + (pointB.longitude - pointA.longitude) * fraction,
+      };
+    }
+
+    function pointToSegmentDistance(point, segmentStart, segmentEnd) {
+      const x = point.longitude;
+      const y = point.latitude;
+      const x1 = segmentStart.longitude;
+      const y1 = segmentStart.latitude;
+      const x2 = segmentEnd.longitude;
+      const y2 = segmentEnd.latitude;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+
+      if (dx === 0 && dy === 0) {
+        return haversineMiles(point, segmentStart);
+      }
+
+      const projection = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy)));
+      const closestPoint = {
+        latitude: y1 + dy * projection,
+        longitude: x1 + dx * projection,
+      };
+
+      return haversineMiles(point, closestPoint);
+    }
+
+    function classifyTrip(distance) {
+      if (distance < 250) {
+        return "short";
+      }
+      if (distance <= 600) {
+        return "medium";
+      }
+      return "long";
+    }
+
+    function getBusRange(bus) {
+      return bus.fuelCapacity * bus.mpg;
+    }
+
+    function selectBestBus(distance, buses) {
+      const preferredType = classifyTrip(distance) === "short" ? "City Bus" : "Long Distance Bus";
+      const sortedBuses = [...buses].sort((firstBus, secondBus) => {
+        const firstPreferred = firstBus.busType === preferredType ? 0 : 1;
+        const secondPreferred = secondBus.busType === preferredType ? 0 : 1;
+
+        if (firstPreferred !== secondPreferred) {
+          return firstPreferred - secondPreferred;
+        }
+
+        const firstHasRange = getBusRange(firstBus) >= distance ? 0 : 1;
+        const secondHasRange = getBusRange(secondBus) >= distance ? 0 : 1;
+
+        if (firstHasRange !== secondHasRange) {
+          return firstHasRange - secondHasRange;
+        }
+
+        return Math.abs(getBusRange(firstBus) - distance) - Math.abs(getBusRange(secondBus) - distance);
+      });
+
+      return sortedBuses[0] || null;
+    }
+
+    function findBestFuelStop(targetPoint, routePoints, fuelStations, excludedNames = new Set(), fuelType = "diesel") {
+      const compatibleStations = fuelStations.filter((station) => station.fuelType === fuelType && !excludedNames.has(station.name));
+
+      if (!compatibleStations.length) {
+        return null;
+      }
+
+      return compatibleStations.reduce((bestStation, station) => {
+        const targetDistance = haversineMiles(targetPoint, station);
+        const routeDistance = routePoints.reduce((bestDistance, routePoint, index) => {
+          if (index === routePoints.length - 1) {
+            return bestDistance;
+          }
+
+          const segmentDistance = pointToSegmentDistance(station, routePoint, routePoints[index + 1]);
+          return Math.min(bestDistance, segmentDistance);
+        }, Number.POSITIVE_INFINITY);
+        const score = targetDistance + routeDistance * 0.75;
+
+        if (!bestStation || score < bestStation.score) {
+          return { station, score };
+        }
+
+        return bestStation;
+      }, null)?.station || null;
+    }
+
+    function findBestFuelStops(startingPoint, destination, bus, fuelStations, distance) {
+      const safeRangeMiles = getBusRange(bus) * 0.85;
+
+      if (distance <= safeRangeMiles) {
+        return [];
+      }
+
+      const stopCount = Math.ceil(distance / safeRangeMiles) - 1;
+      const routePoints = [startingPoint, destination];
+      const usedStationNames = new Set();
+      const fuelStops = [];
+
+      for (let stopIndex = 1; stopIndex <= stopCount; stopIndex += 1) {
+        const targetPoint = interpolatePoint(startingPoint, destination, stopIndex / (stopCount + 1));
+        const nextStop = findBestFuelStop(targetPoint, routePoints, fuelStations, usedStationNames, bus.fuelType);
+
+        if (!nextStop) {
+          break;
+        }
+
+        usedStationNames.add(nextStop.name);
+        fuelStops.push(nextStop);
+      }
+
+      return fuelStops;
+    }
+
+    function buildTravelSummary(startingPoint, destination, bus, tripType, distance, fuelStops) {
+      const estimatedRange = getBusRange(bus);
+      const estimatedTime = (distance / bus.speed).toFixed(2);
+      const stopNames = fuelStops.length ? fuelStops.map((station) => formatFuelStationLabel(station)).join(", ") : "None";
+
+      autoBusOutput.textContent = `Automatic bus selection: ${bus.make} ${bus.model} (${bus.busType}) | Range: ~${estimatedRange.toFixed(0)} miles | Fuel: ${bus.fuelType}`;
+      autoFuelOutput.textContent = fuelStops.length
+        ? `Automatic fuel stops: ${stopNames}`
+        : "Automatic fuel stops: None needed for this trip.";
+
+      return [
+        `Departing from: ${formatStationDetails(startingPoint)}`,
+        `Destination: ${formatStationDetails(destination)}`,
+        `Trip class: ${tripType}`,
+        `Selected bus: ${bus.make} ${bus.model}`,
+        `Bus type: ${bus.busType}`,
+        `Trip distance: ${distance.toFixed(1)} miles`,
+        `Estimated travel time: ${estimatedTime} hours`,
+        `Estimated bus range: ${estimatedRange.toFixed(0)} miles`,
+        `Fuel stops added: ${fuelStops.length ? "Yes" : "No"}`,
+        `Selected fuel stops: ${stopNames}`,
+      ].join("\n");
+    }
+
+    // --- Map state ---
+    let map = null;
+    let stationMarkers = [];
+    let fuelMarkers = [];
+    let routeLayer = null;
+
+    function initMap() {
+      map = L.map("map").setView([39.5, -98.35], 4);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18,
+      }).addTo(map);
+      setTimeout(() => {
+  map.invalidateSize();
+}, 100);
+    }
+
+    function clearRoutes() {
+      if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
+    }
+
+    function renderMapMarkers() {
+      if (!map) return;
+      stationMarkers.forEach(m => map.removeLayer(m));
+      fuelMarkers.forEach(m => map.removeLayer(m));
+      stationMarkers = [];
+      fuelMarkers = [];
+      const bounds = [];
+      stationList.forEach(s => {
+        const m = L.marker([s.latitude, s.longitude])
+          .bindPopup(`<strong>${formatStationLabel(s)}</strong><br>${s.state ? `${s.city}, ${s.state}` : "Bus Station"}`)
+          .addTo(map);
+        stationMarkers.push(m);
+        bounds.push([s.latitude, s.longitude]);
+      });
+      fuelStationList.forEach(f => {
+        const m = L.circleMarker([f.latitude, f.longitude], {
+          radius: 8, color: "#b45309", fillColor: "#fbbf24", fillOpacity: 0.9,
+        }).bindPopup(`<strong>${formatFuelStationLabel(f)}</strong><br>${f.state ? `${f.city}, ${f.state}` : "Fuel Stop"} | Fuel: ${f.fuelType}`).addTo(map);
+        fuelMarkers.push(m);
+        bounds.push([f.latitude, f.longitude]);
+      });
+      if (bounds.length >= 2) map.fitBounds(bounds, { padding: [30, 30] });
+    }
+
+    function drawStraightRoute(startingPoint, fuelStops, destination) {
+      clearRoutes();
+      const coords = [[startingPoint.latitude, startingPoint.longitude]];
+      fuelStops.forEach((fuelStop) => {
+        coords.push([fuelStop.latitude, fuelStop.longitude]);
+      });
+      coords.push([destination.latitude, destination.longitude]);
+      routeLayer = L.polyline(coords, { color: "#1f6feb", weight: 3, dashArray: "8 6" }).addTo(map);
+      map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+      let miles = 0;
+      for (let index = 0; index < coords.length - 1; index += 1) {
+        const current = { latitude: coords[index][0], longitude: coords[index][1] };
+        const next = { latitude: coords[index + 1][0], longitude: coords[index + 1][1] };
+        miles += haversineMiles(current, next);
+      }
+
+      return miles;
+    }
+
+    function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getTravelPlanAccess() {
+  return new TravelPlan(
+    stationList[0] || { name: "", latitude: 0, longitude: 0 },
+    stationList[0] || { name: "", latitude: 0, longitude: 0 },
+    busList[0] || { fuelCapacity: 1, mpg: 1, speed: 1, make: "", model: "", busType: "" },
+    null
+  );
+}
+
+function renderSavedPlans() {
+  if (!savedPlansOutput) return;
+
+  if (!auth.isAuthenticated()) {
+    savedPlansOutput.textContent = "Log in to view saved travel plans.";
+    return;
+  }
+
+  const role = auth.getCurrentRole();
+  const planAccess = getTravelPlanAccess();
+
+  const plans = role === "admin"
+    ? planAccess.getAllPlansForAdmin()
+    : planAccess.getPlansForCurrentUser();
+
+  if (!plans.length) {
+    savedPlansOutput.textContent = role === "admin"
+      ? "No saved travel plans in the system yet."
+      : "You have no saved travel plans yet.";
+    return;
+  }
+
+  savedPlansOutput.innerHTML = plans.map((plan) => {
+    const fuelStops = Array.isArray(plan.fuelStops) && plan.fuelStops.length
+      ? plan.fuelStops.map((stop) => escapeHtml(stop.name || stop)).join(", ")
+      : "None";
+
+    const ownerLine = role === "admin"
+      ? `<div><strong>User:</strong> ${escapeHtml(plan.username)}</div>`
+      : "";
+
+    return `
+      <div class="saved-plan-item">
+        ${ownerLine}
+        <div><strong>Created:</strong> ${escapeHtml(plan.createdAt)}</div>
+        <div><strong>From:</strong> ${escapeHtml(plan.startingPoint?.name)}</div>
+        <div><strong>To:</strong> ${escapeHtml(plan.destination?.name)}</div>
+        <div><strong>Bus:</strong> ${escapeHtml(plan.bus?.make)} ${escapeHtml(plan.bus?.model)}</div>
+        <div><strong>Bus Type:</strong> ${escapeHtml(plan.bus?.busType)}</div>
+        <div><strong>Route Mode:</strong> ${escapeHtml(plan.routeMode || "straight")}</div>
+        <div><strong>Trip Class:</strong> ${escapeHtml(plan.tripClass || "short")}</div>
+        <div><strong>Distance:</strong> ${escapeHtml(plan.distance)} miles</div>
+        <div><strong>Estimated Time:</strong> ${escapeHtml(plan.time)} hours</div>
+        <div><strong>Fuel Stops:</strong> ${fuelStops}</div>
+        <div class="saved-plan-actions">
+  <button type="button" class="edit-plan-btn" data-plan-id="${escapeHtml(plan.id)}">
+    Edit Plan
+  </button>
+  <button type="button" class="delete-plan-btn" data-plan-id="${escapeHtml(plan.id)}">
+    Delete Plan
+  </button>
+</div>
+      </div>
+    `;
+  }).join("");
+
+savedPlansOutput.querySelectorAll(".edit-plan-btn").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const planId = button.dataset.planId;
+    const planAccess = getTravelPlanAccess();
+    const allPlans = planAccess.getSavedPlans();
+    const existingPlan = allPlans.find((plan) => plan.id === planId);
+
+    if (!existingPlan) {
+      mapOutput.textContent = "Travel plan not found.";
+      return;
+    }
+
+    const startIndex = stationList.findIndex(
+      (station) => station.name === existingPlan.startingPoint?.name
+    );
+    const destinationIndex = stationList.findIndex(
+      (station) => station.name === existingPlan.destination?.name
+    );
+
+    if (startIndex >= 0) {
+      travelStartSelect.value = String(startIndex);
+    }
+
+    if (destinationIndex >= 0) {
+      travelDestinationSelect.value = String(destinationIndex);
+    }
+
+    if (existingPlan.routeMode) {
+      routeModeSelect.value = existingPlan.routeMode;
+    }
+
+    window.currentEditingPlanId = planId;
+    travelOutput.textContent = "Editing selected travel plan. Adjust the trip and click Create Travel Plan to save changes.";
+  });
+});
+
+savedPlansOutput.querySelectorAll(".delete-plan-btn").forEach((button) => {
+  button.addEventListener("click", () => {
+    const planId = button.dataset.planId;
+    const planAccess = getTravelPlanAccess();
+    const deleteResult = planAccess.deletePlan(planId);
+
+    if (!deleteResult.success) {
+      travelOutput.textContent = deleteResult.message;
+      return;
+    }
+
+    if (window.currentEditingPlanId === planId) {
+      window.currentEditingPlanId = null;
+    }
+
+    clearRoutes();
+    travelOutput.textContent = deleteResult.message;
+    mapOutput.textContent = "Travel plan deleted. Create a new travel plan to draw a route.";
+    renderSavedPlans();
+  });
+});
+}
+
+    const drawRoadRoute = async (start, destination, fuelStop = null) => {
+      clearRoutes();
+
+      const normalizedFuelStops = Array.isArray(fuelStop)
+        ? fuelStop
+        : (fuelStop ? [fuelStop] : []);
+
+      const points = [start, ...normalizedFuelStops, destination];
+      const coords = points
+        .map((point) => `${point.longitude},${point.latitude}`)
+        .join(";");
+
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/${coords}` +
+        `?overview=full&geometries=geojson&steps=false`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!response.ok || data.code !== "Ok" || !data.routes?.length) {
+        throw new Error(data.message || data.code || "Road routing failed.");
+      }
+
+      const route = data.routes[0];
+      const latLngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+
+      routeLayer = L.polyline(latLngs, {
+        color: "#059669",
+        weight: 6,
+      }).addTo(map);
+
+      map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+      return {
+        miles: route.distance * 0.000621371,
+        hours: route.duration / 3600,
+      };
+    };
+
+    proceedBtn.addEventListener("click", () => {
+      showLoginForm();
+    });
+
+    createBtn.addEventListener("click", () => {
+      showCreateAccountForm();
+    });
+
+    createAccountBtn.addEventListener("click", () => {
+  const firstName = firstNameInput.value.trim();
+  const lastName = lastNameInput.value.trim();
+  const email = createEmailInput.value.trim();
+  const username = createUsernameInput.value.trim();
+  const password = createPasswordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
+
+  if (!firstName || !lastName || !email || !username || !password || !confirmPassword) {
+    showCreateMessage("All fields are required.", "error");
+    return;
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    showCreateMessage("Enter a valid email address.", "error");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showCreateMessage("Password and confirm password do not match.", "error");
+    return;
+  }
+
+  const result = auth.createAccount({
+    firstName,
+    lastName,
+    email,
+    username,
+    password,
+    confirmPassword
+  });
+
+  showCreateMessage(result.message, result.success ? "ok" : "error");
+
+  if (result.success) {
+    clearCreateInputs();
+    usernameInput.value = username;
+    showLoginForm();
+    showMessage("Account created. Please log in.", "ok");
+  }
+});
+
+    backToLoginBtn.addEventListener("click", () => {
+      showLoginForm();
+    });
+
+    loginBtn.addEventListener("click", () => {
+  const result = auth.login(usernameInput.value, passwordInput.value);
+  showMessage(result.message, result.success ? "ok" : "error");
+
+  if (result.success) {
+    syncAuthUI();
+  }
+});
+
+    exitBtn.addEventListener("click", () => {
+      clearLoginInputs();
+      showMessage("Session cleared.", "ok");
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      auth.logout();
+      clearLoginInputs();
+      clearCreateInputs();
+      syncAuthUI();
+      showLoginForm();
+      showMessage("Logged out successfully.", "ok");
+    });
+
+    document.getElementById("addBusBtn").addEventListener("click", () => {
+      const make = document.getElementById("busMake").value.trim();
+      const model = document.getElementById("busModel").value.trim();
+      const busType = document.getElementById("busType").value;
+      const fuelCapacity = Number(document.getElementById("busFuelCapacity").value);
+      const mpg = Number(document.getElementById("busMpg").value);
+      const speed = Number(document.getElementById("busSpeed").value);
+      const fuelType = document.getElementById("busFuelType").value;
+
+      if (!make || !model || fuelCapacity <= 0 || mpg <= 0 || speed <= 0) {
+        busOutput.textContent = "Enter valid bus details before adding a bus.";
+        return;
+      }
+
+      const bus = new Bus(make, model, busType, fuelCapacity, mpg, speed, fuelType);
+      bus.addBus(busList);
+      renderBuses();
+    });
+
+    document.getElementById("addStationBtn").addEventListener("click", () => {
+      const name = document.getElementById("stationName").value.trim();
+      const latitude = Number(document.getElementById("stationLatitude").value);
+      const longitude = Number(document.getElementById("stationLongitude").value);
+      const station = new BusStation(name, "", "", latitude, longitude);
+
+      if (!station.addStation(stationList)) {
+        stationOutput.textContent = "Station must have a 3-60 character name, latitude between -90 and 90, and longitude between -180 and 180.";
+        return;
+      }
+
+      renderStations();
+    });
+
+    document.getElementById("addFuelStationBtn").addEventListener("click", () => {
+      const name = document.getElementById("fuelStationName").value.trim();
+      const latitude = Number(document.getElementById("fuelStationLatitude").value);
+      const longitude = Number(document.getElementById("fuelStationLongitude").value);
+      const selectedGrade = document.getElementById("fuelGrade").value;
+
+      if (!name || Number.isNaN(latitude) || Number.isNaN(longitude)) {
+        fuelOutput.textContent = "Enter valid fuel station details before adding a station.";
+        return;
+      }
+
+      const fuelStation = new FuelStation(name, "", "", latitude, longitude, selectedGrade);
+      fuelStationList.push(fuelStation);
+      renderFuelStations();
+    });
+
+document.getElementById("createTravelPlanBtn").addEventListener("click", async () => {
+  const startIndex = travelStartSelect.value;
+  const destinationIndex = travelDestinationSelect.value;
+
+  if (!auth.isAuthenticated()) {
+    travelOutput.textContent = "Log in before creating a travel plan.";
+    return;
+  }
+
+  if (startIndex === "" || destinationIndex === "") {
+    travelOutput.textContent = "Select a starting point and a destination first.";
+    return;
+  }
+
+  if (startIndex === destinationIndex) {
+    travelOutput.textContent = "Starting point and destination must be different.";
+    return;
+  }
+
+  const startingPoint = stationList[Number(startIndex)];
+  const destination = stationList[Number(destinationIndex)];
+  const planningTrip = new TravelPlan(startingPoint, destination, busList[0] || null, null);
+  const planningDistance = Number(planningTrip.distance);
+  const selectedBus = selectBestBus(planningDistance, busList);
+
+  if (!selectedBus) {
+    travelOutput.textContent = "Add at least one bus before creating a travel plan.";
+    return;
+  }
+
+  let selectedFuelStops = findBestFuelStops(
+    startingPoint,
+    destination,
+    selectedBus,
+    fuelStationList,
+    planningDistance
+  );
+
+  let routeResult;
+
+  try {
+    if (routeModeSelect.value === "road") {
+      routeResult = await drawRoadRoute(startingPoint, destination, selectedFuelStops);
+
+      const refreshedStops = routeResult.miles > getBusRange(selectedBus)
+        ? findBestFuelStops(startingPoint, destination, selectedBus, fuelStationList, routeResult.miles)
+        : [];
+
+      const stopsChanged =
+        refreshedStops.length !== selectedFuelStops.length ||
+        refreshedStops.some((station, index) => station.name !== selectedFuelStops[index]?.name);
+
+      if (stopsChanged) {
+        selectedFuelStops = refreshedStops;
+        routeResult = await drawRoadRoute(startingPoint, destination, selectedFuelStops);
+      }
+
+      mapOutput.textContent = `Road route drawn with ${selectedFuelStops.length} fuel stop${selectedFuelStops.length === 1 ? "" : "s"}.`;
+    } else {
+      const miles = drawStraightRoute(startingPoint, selectedFuelStops, destination);
+      routeResult = {
+        miles,
+        hours: selectedBus.speed > 0 ? miles / selectedBus.speed : 0,
+      };
+      mapOutput.textContent = `Straight route drawn with ${selectedFuelStops.length} fuel stop${selectedFuelStops.length === 1 ? "" : "s"}.`;
+    }
+  } catch (error) {
+    const fallbackMiles = drawStraightRoute(startingPoint, selectedFuelStops, destination);
+    routeResult = {
+      miles: fallbackMiles,
+      hours: selectedBus.speed > 0 ? fallbackMiles / selectedBus.speed : 0,
+    };
+    mapOutput.textContent = "Road routing failed. Straight-line fallback drawn.";
+    travelOutput.textContent = `Road routing failed. Try straight route.\n${error.message}`;
+  }
+
+  const stopNames = selectedFuelStops.length
+    ? selectedFuelStops.map((station) => formatFuelStationLabel(station)).join(", ")
+    : "None";
+
+  autoBusOutput.textContent =
+    `Automatic bus selection: ${selectedBus.make} ${selectedBus.model} (${selectedBus.busType}) | Range: ~${getBusRange(selectedBus).toFixed(0)} miles | Fuel: ${selectedBus.fuelType}`;
+
+  autoFuelOutput.textContent = selectedFuelStops.length
+    ? `Automatic fuel stops: ${stopNames}`
+    : "Automatic fuel stops: None needed for this trip.";
+
+  const completedPlan = new TravelPlan(
+    startingPoint,
+    destination,
+    selectedBus,
+    selectedFuelStops[0] || null
+  );
+
+  completedPlan.distance = Number(routeResult.miles.toFixed(2));
+  completedPlan.time = Number(routeResult.hours.toFixed(2));
+
+  const saveResult = completedPlan.savePlan();
+
+  if (!saveResult.success) {
+    travelOutput.textContent = saveResult.message;
+    return;
+  }
+
+  const savedPlans = completedPlan.getSavedPlans();
+  const newestPlan = savedPlans[savedPlans.length - 1];
+
+  if (newestPlan) {
+    newestPlan.routeMode = routeModeSelect.value;
+    newestPlan.tripClass = classifyTrip(routeResult.miles);
+    newestPlan.fuelStops = selectedFuelStops;
+    newestPlan.distance = Number(routeResult.miles.toFixed(2));
+    newestPlan.time = Number(routeResult.hours.toFixed(2));
+
+    localStorage.setItem(completedPlan.storageKey, JSON.stringify(savedPlans));
+  }
+
+  travelOutput.textContent =
+    `Bus: ${selectedBus.make} ${selectedBus.model}\n` +
+    `Route mode: ${routeModeSelect.value}\n` +
+    `Trip class: ${classifyTrip(routeResult.miles)}\n` +
+    `Distance: ${routeResult.miles.toFixed(2)} miles\n` +
+    `Estimated time: ${routeResult.hours.toFixed(2)} hours\n` +
+    `Estimated bus range: ${getBusRange(selectedBus).toFixed(0)} miles\n` +
+    `Fuel stops: ${stopNames}\n` +
+    `Status: Travel plan saved successfully.`;
+
+  renderSavedPlans();
+});
+
+    renderBuses();
+    renderStations();
+    renderFuelStations();
+    initMap();
+    renderMapMarkers();
+    syncAuthUI();
+    renderSavedPlans();
+  </script>
+</body>
+</html>
