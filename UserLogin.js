@@ -7,7 +7,13 @@ export default class UserLogin {
 
   getAccounts() {
     const accounts = localStorage.getItem(this.storageKey);
-    return accounts ? JSON.parse(accounts) : [];
+    const parsedAccounts = accounts ? JSON.parse(accounts) : [];
+
+    // Never trust persisted roles for UI-created accounts.
+    return parsedAccounts.map((account) => ({
+      ...account,
+      role: "user"
+    }));
   }
 
   saveAccounts(accounts) {
@@ -161,7 +167,7 @@ export default class UserLogin {
     );
 
     if (foundUser) {
-      const role = foundUser.role || "user";
+      const role = "user";
 
       localStorage.setItem("currentUser", foundUser.username);
       localStorage.setItem("currentRole", role);
@@ -204,7 +210,18 @@ export default class UserLogin {
   }
 
   getCurrentRole() {
-    return localStorage.getItem("currentRole");
+    const currentUser = localStorage.getItem("currentUser");
+    const currentRole = localStorage.getItem("currentRole");
+
+    if (!currentUser) {
+      return null;
+    }
+
+    if (currentUser === this.adminUsername && currentRole === "admin") {
+      return "admin";
+    }
+
+    return "user";
   }
 
   getCurrentFirstName() {

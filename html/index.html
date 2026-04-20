@@ -3,12 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Software Engineering Bus</title>
+  <title>OmniLink Transit</title>
   <link rel="stylesheet" href="../style/style.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
+  <div id="introScreen" class="intro hidden">
+    <div class="intro-content">
+      <div class="logo-spin">
+        <div class="orbit"></div>
+        <div class="core">OLT</div>
+      </div>
+      <p class="intro-text">Initializing OmniLink Transit...</p>
+    </div>
+  </div>
+
+  <div id="postLoginScreen" class="intro hidden">
+    <div class="intro-content">
+      <div class="logo-spin">
+        <div class="orbit"></div>
+        <div class="core">OLT</div>
+      </div>
+      <p class="intro-text" id="postLoginText">Preparing your workspace...</p>
+    </div>
+  </div>
+
   <section class="login-shell" id="loginSection">
   <main class="card login-card" aria-live="polite">
 
@@ -16,8 +36,8 @@
     <div id="disclaimerView">
       <h1>Project Disclaimer</h1>
       <p class="subtitle login-subtitle">
-        This cross-country bus management system is a fictional college project created for educational purposes only.
-        It does not represent a real transportation service, booking platform, or dispatching system.
+        OmniLink Transit is a fictional operations platform created for demonstration and educational use.
+        It does not represent a live transportation service, booking platform, or dispatching system.
       </p>
       <button id="proceedBtn" type="button">OK PROCEED</button>
     </div>
@@ -93,9 +113,12 @@
   <section class="app-shell hidden" id="appSection">
     <div class="container">
       <div class="topbar card">
-        <div>
-          <h1>Software Engineering Bus System</h1>
-          <p class="subtitle">Plan trips, manage buses, and update station data after login.</p>
+        <div class="brand-header">
+          <div class="brand-mark" aria-hidden="true">OLT</div>
+          <div class="brand-copy">
+            <h1>OmniLink Transit</h1>
+            <p class="subtitle">Unified Transit Operations &amp; Route Management</p>
+          </div>
         </div>
         <div class="topbar-actions">
           <span class="session-user">Signed in as <strong id="currentUser">Guest</strong></span>
@@ -103,109 +126,179 @@
         </div>
       </div>
 
-      <div class="grid">
-        <div id="adminControls" style="display: contents;">
-        <section class="card">
-          <h2>Add Bus</h2>
-          <label for="busMake">Make</label>
-          <input id="busMake" type="text" />
+      <div class="tabs">
+        <button class="tab active admin-only-tab" data-tab="stations" type="button">Bus Stations</button>
+        <button class="tab admin-only-tab" data-tab="buses" type="button">Buses</button>
+        <button class="tab admin-only-tab" data-tab="fuel" type="button">Fuel Stations</button>
+        <button class="tab" data-tab="travel" type="button">Travel Planning</button>
+      </div>
 
-          <label for="busModel">Model</label>
-          <input id="busModel" type="text" />
+      <div id="panel-stations" class="panel active admin-only-panel">
+        <div class="panel-grid">
+          <section class="card admin-only form-card">
+            <h2>Add Bus Station</h2>
+            <label for="stationName">Station Name</label>
+            <input id="stationName" type="text" />
 
-          <label for="busType">Type</label>
-          <select id="busType">
-            <option value="City Bus">City Bus</option>
-            <option value="Long Distance Bus">Long Distance Bus</option>
-          </select>
+            <label for="stationLatitude">Latitude</label>
+            <input id="stationLatitude" type="number" min="-90" max="90" step="0.01" />
 
-          <label for="busFuelCapacity">Fuel Capacity (gal)</label>
-          <input id="busFuelCapacity" type="number" min="1" step="1" />
+            <label for="stationLongitude">Longitude</label>
+            <input id="stationLongitude" type="number" min="-180" max="180" step="0.01" />
 
-          <label for="busMpg">MPG</label>
-          <input id="busMpg" type="number" min="0.1" step="0.1" />
+            <button id="addStationBtn" type="button">Add Station</button>
+          </section>
 
-          <label for="busSpeed">Speed (mph)</label>
-          <input id="busSpeed" type="number" min="1" step="1" />
-
-          <label for="busFuelType">Fuel Type</label>
-          <select id="busFuelType">
-            <option value="unleaded">Unleaded</option>
-            <option value="diesel">Diesel</option>
-          </select>
-
-          <button id="addBusBtn" type="button">Add Bus</button>
-          <div class="output" id="busOutput">No buses added yet.</div>
-        </section>
-
-        <section class="card">
-          <h2>Add Bus Station</h2>
-          <label for="stationName">Station Name</label>
-          <input id="stationName" type="text" />
-
-          <label for="stationLatitude">Latitude</label>
-          <input id="stationLatitude" type="number" min="-90" max="90" step="0.01" />
-
-          <label for="stationLongitude">Longitude</label>
-          <input id="stationLongitude" type="number" min="-180" max="180" step="0.01" />
-
-          <button id="addStationBtn" type="button">Add Station</button>
-          <div class="output" id="stationOutput">No stations added yet.</div>
-        </section>
-
-        <section class="card">
-          <h2>Add Fuel Station</h2>
-          <label for="fuelStationName">Fuel Station Name</label>
-          <input id="fuelStationName" type="text" />
-
-          <label for="fuelStationLatitude">Latitude</label>
-          <input id="fuelStationLatitude" type="number" min="-90" max="90" step="0.01" />
-
-          <label for="fuelStationLongitude">Longitude</label>
-          <input id="fuelStationLongitude" type="number" min="-180" max="180" step="0.01" />
-
-          <label for="fuelGrade">Fuel Grade</label>
-          <select id="fuelGrade">
-            <option value="unleaded">Unleaded</option>
-            <option value="diesel">Diesel</option>
-          </select>
-
-          <button id="addFuelStationBtn" type="button">Add Fuel Station</button>
-          <div class="output" id="fuelOutput">No fuel stations added yet.</div>
-        </section>
+          <section class="card list-card">
+            <div class="section-head">
+              <div>
+                <h2>Bus Stations</h2>
+                <p class="section-copy">Manage hubs, terminals, and local pickup locations.</p>
+              </div>
+            </div>
+            <input id="searchStations" class="search-input" type="text" placeholder="Search stations by name, city, or state" />
+            <div class="output output--list" id="stationOutput">No stations added yet.</div>
+          </section>
         </div>
+      </div>
 
-        <section class="card">
-          <h2>Create Travel Plan</h2>
-          <label for="travelStart">Starting Point</label>
-          <select id="travelStart"></select>
+      <div id="panel-buses" class="panel admin-only-panel">
+        <div class="panel-grid">
+          <section class="card admin-only form-card">
+            <h2>Add Bus</h2>
+            <label for="busMake">Make</label>
+            <input id="busMake" type="text" />
 
-          <label for="travelDestination">Destination</label>
-          <select id="travelDestination"></select>
+            <label for="busModel">Model</label>
+            <input id="busModel" type="text" />
 
-          <div class="output" id="autoBusOutput">Bus will be selected automatically based on trip distance.</div>
+            <label for="busType">Type</label>
+            <select id="busType">
+              <option value="City Bus">City Bus</option>
+              <option value="Long Distance Bus">Long Distance Bus</option>
+            </select>
 
-          <div class="output" id="autoFuelOutput">Fuel stops will be added automatically when needed.</div>
+            <label for="busFuelCapacity">Fuel Capacity (gal)</label>
+            <input id="busFuelCapacity" type="number" min="1" step="1" />
 
-          <button id="createTravelPlanBtn" type="button">Create Travel Plan</button>
-          <div class="output" id="travelOutput">Add at least one bus and two stations to create a plan.</div>
-        </section>
+            <label for="busMpg">MPG</label>
+            <input id="busMpg" type="number" min="0.1" step="0.1" />
 
-        <section class="card">
-  <h2>Saved Travel Plans</h2>
-  <div class="output" id="savedPlansOutput">Log in to view saved travel plans.</div>
-</section>
+            <label for="busSpeed">Speed (mph)</label>
+            <input id="busSpeed" type="number" min="1" step="1" />
 
-        <section class="card card--full">
-          <h2>Map &amp; Route</h2>
-          <label for="routeMode">Route Mode</label>
-          <select id="routeMode">
-            <option value="straight">Straight Route (coordinate line)</option>
-            <option value="road">Road Route (OSRM, requires internet)</option>
-          </select>
-          <div id="map"></div>
-          <div class="output" id="mapOutput">Map ready. Create a travel plan to draw a route.</div>
-        </section>
+            <label for="busFuelType">Fuel Type</label>
+            <select id="busFuelType">
+              <option value="unleaded">Unleaded</option>
+              <option value="diesel">Diesel</option>
+            </select>
+
+            <button id="addBusBtn" type="button">Add Bus</button>
+          </section>
+
+          <section class="card list-card">
+            <div class="section-head">
+              <div>
+                <h2>Fleet</h2>
+                <p class="section-copy">Review available buses, capacity, speed, and range at a glance.</p>
+              </div>
+            </div>
+            <input id="searchBuses" class="search-input" type="text" placeholder="Search buses by make, model, type, or fuel" />
+            <div class="output output--list" id="busOutput">No buses added yet.</div>
+          </section>
+        </div>
+      </div>
+
+      <div id="panel-fuel" class="panel admin-only-panel">
+        <div class="panel-grid">
+          <section class="card admin-only form-card">
+            <h2>Add Fuel Station</h2>
+            <label for="fuelStationName">Fuel Station Name</label>
+            <input id="fuelStationName" type="text" />
+
+            <label for="fuelStationLatitude">Latitude</label>
+            <input id="fuelStationLatitude" type="number" min="-90" max="90" step="0.01" />
+
+            <label for="fuelStationLongitude">Longitude</label>
+            <input id="fuelStationLongitude" type="number" min="-180" max="180" step="0.01" />
+
+            <label for="fuelGrade">Fuel Grade</label>
+            <select id="fuelGrade">
+              <option value="unleaded">Unleaded</option>
+              <option value="diesel">Diesel</option>
+            </select>
+
+            <button id="addFuelStationBtn" type="button">Add Fuel Station</button>
+          </section>
+
+          <section class="card list-card">
+            <div class="section-head">
+              <div>
+                <h2>Fuel Stations</h2>
+                <p class="section-copy">Track refueling locations and keep long routes realistic.</p>
+              </div>
+            </div>
+            <input id="searchFuelStations" class="search-input" type="text" placeholder="Search fuel stations by name, city, state, or fuel" />
+            <div class="output output--list" id="fuelOutput">No fuel stations added yet.</div>
+          </section>
+        </div>
+      </div>
+
+      <div id="panel-travel" class="panel">
+        <div class="travel-dashboard">
+          <div class="travel-sidebar">
+            <section class="card travel-card">
+              <div class="section-head">
+                <div>
+                  <h2>Create Travel Plan</h2>
+                  <p class="section-copy">Build routes quickly with automatic bus and fuel-stop selection.</p>
+                </div>
+              </div>
+
+              <div class="travel-controls">
+                <label for="travelStart">Starting Point</label>
+                <select id="travelStart"></select>
+
+                <label for="travelDestination">Destination</label>
+                <select id="travelDestination"></select>
+
+                <label for="routeMode">Route Mode</label>
+                <select id="routeMode">
+                  <option value="straight">Straight Route (coordinate line)</option>
+                  <option value="road">Road Route (OSRM, requires internet)</option>
+                </select>
+
+                <button id="createTravelPlanBtn" type="button">Create Travel Plan</button>
+              </div>
+
+              <div class="output" id="autoBusOutput">Bus will be selected automatically based on trip distance.</div>
+              <div class="output" id="autoFuelOutput">Fuel stops will be added automatically when needed.</div>
+              <div class="output" id="travelOutput">Add at least one bus and two stations to create a plan.</div>
+            </section>
+
+            <section class="card saved-plans-card">
+              <div class="section-head">
+                <div>
+                  <h2>Saved Travel Plans</h2>
+                  <p class="section-copy">Review, edit, or remove previously saved routes.</p>
+                </div>
+              </div>
+              <input id="searchTravelPlans" class="search-input" type="text" placeholder="Search travel plans by user, starting point, or destination" />
+              <div class="output output--list" id="savedPlansOutput">Log in to view saved travel plans.</div>
+            </section>
+          </div>
+
+          <section class="card card--map">
+            <div class="section-head section-head--map">
+              <div>
+                <h2>Map &amp; Route</h2>
+                <p class="section-copy">Visualize stations, fuel stops, and the active route with more room to explore.</p>
+              </div>
+            </div>
+            <div id="map"></div>
+            <div class="output" id="mapOutput">Map ready. Create a travel plan to draw a route.</div>
+          </section>
+        </div>
       </div>
     </div>
   </section>
@@ -219,18 +312,29 @@
 
     const auth = new UserLogin();
 
+    const introScreen = document.getElementById("introScreen");
+    const postLoginScreen = document.getElementById("postLoginScreen");
+    const postLoginText = document.getElementById("postLoginText");
     const loginSection = document.getElementById("loginSection");
     const disclaimerView = document.getElementById("disclaimerView");
     const loginView = document.getElementById("loginView");
     const createAccountView = document.getElementById("createAccountView");
     const appSection = document.getElementById("appSection");
     const currentUser = document.getElementById("currentUser");
-    const adminControls = document.getElementById("adminControls");
+    const adminSections = document.querySelectorAll(".admin-only");
+    const adminTabButtons = document.querySelectorAll(".admin-only-tab");
+    const adminPanels = document.querySelectorAll(".admin-only-panel");
+    const tabs = document.querySelectorAll(".tab");
+    const panels = document.querySelectorAll(".panel");
     const proceedBtn = document.getElementById("proceedBtn");
     const loginBtn = document.getElementById("loginBtn");
     const createBtn = document.getElementById("createBtn");
     const createAccountBtn = document.getElementById("createAccountBtn");
     const savedPlansOutput = document.getElementById("savedPlansOutput");
+    const searchBusesInput = document.getElementById("searchBuses");
+    const searchStationsInput = document.getElementById("searchStations");
+    const searchFuelStationsInput = document.getElementById("searchFuelStations");
+    const searchTravelPlansInput = document.getElementById("searchTravelPlans");
     const backToLoginBtn = document.getElementById("backToLoginBtn");
     const exitBtn = document.getElementById("exitBtn");
     const usernameInput = document.getElementById("username");
@@ -247,6 +351,10 @@
     const busList = [];
     const stationList = [];
     const fuelStationList = [];
+
+    let editingBusIndex = null;
+    let editingStationIndex = null;
+    let editingFuelStationIndex = null;
 
     // --- Seeded buses (representative real-world models; specs are representative) ---
     [
@@ -342,6 +450,68 @@
     const travelStartSelect = document.getElementById("travelStart");
     const travelDestinationSelect = document.getElementById("travelDestination");
 
+    const isAdminSession = () => {
+      const role = auth.getCurrentRole();
+      const user = auth.getCurrentUser();
+      return role === "admin" && user === "admin123";
+    };
+
+    const ensureTravelPanelForUser = () => {
+      tabs.forEach((tab) => {
+        tab.classList.remove("active");
+      });
+      panels.forEach((panel) => {
+        panel.classList.remove("active");
+      });
+
+      const travelTab = document.querySelector('.tab[data-tab="travel"]');
+      const travelPanel = document.getElementById("panel-travel");
+
+      if (travelTab) {
+        travelTab.classList.add("active");
+      }
+      if (travelPanel) {
+        travelPanel.classList.add("active");
+      }
+    };
+
+    const requireAdminAccess = (outputElement, blockedMessage = "Only admin123 can perform this action.") => {
+      if (isAdminSession()) {
+        return true;
+      }
+
+      if (outputElement) {
+        outputElement.textContent = blockedMessage;
+      }
+      return false;
+    };
+
+    const runPostLoginTransition = () => {
+      const role = auth.getCurrentRole();
+      const username = auth.getCurrentUser() || "User";
+
+      postLoginText.textContent = role === "admin"
+        ? "Initializing Admin Permissions..."
+        : `Welcome in, ${username}`;
+
+      postLoginScreen.classList.remove("hidden", "fade-out");
+
+      requestAnimationFrame(() => {
+        postLoginScreen.classList.add("show");
+      });
+
+      setTimeout(() => {
+        postLoginScreen.classList.add("fade-out");
+        postLoginScreen.classList.remove("show");
+
+        setTimeout(() => {
+          postLoginScreen.classList.add("hidden");
+          postLoginScreen.classList.remove("fade-out");
+          syncAuthUI();
+        }, 500);
+      }, 1900);
+    };
+
     const showMessage = (text, kind = "") => {
       message.textContent = text;
       message.className = kind ? `message ${kind}` : "message";
@@ -391,16 +561,28 @@
     };
 
  const syncAuthUI = () => {
-  const role = auth.getCurrentRole() || "user";
   const loggedInUser = auth.getCurrentUser() || "Guest";
+  const adminActive = isAdminSession();
 
   if (auth.isAuthenticated()) {
     currentUser.textContent = loggedInUser;
     loginSection.classList.add("hidden");
     appSection.classList.remove("hidden");
 
-    if (adminControls) {
-      adminControls.style.display = role === "admin" ? "contents" : "none";
+    adminSections.forEach((section) => {
+      section.classList.toggle("hidden", !adminActive);
+    });
+
+    adminTabButtons.forEach((tab) => {
+      tab.classList.toggle("hidden", !adminActive);
+    });
+
+    adminPanels.forEach((panel) => {
+      panel.classList.toggle("hidden", !adminActive);
+    });
+
+    if (!adminActive) {
+      ensureTravelPanelForUser();
     }
 
     renderSavedPlans();
@@ -418,9 +600,17 @@
   appSection.classList.add("hidden");
   loginSection.classList.remove("hidden");
 
-  if (adminControls) {
-    adminControls.style.display = "contents";
-  }
+  adminSections.forEach((section) => {
+    section.classList.remove("hidden");
+  });
+
+  adminTabButtons.forEach((tab) => {
+    tab.classList.remove("hidden");
+  });
+
+  adminPanels.forEach((panel) => {
+    panel.classList.remove("hidden");
+  });
 
   if (savedPlansOutput) {
     savedPlansOutput.textContent = "Log in to view saved travel plans.";
@@ -471,16 +661,222 @@
       return station.name;
     };
 
-    const renderBuses = () => {
-      busOutput.textContent = busList.length
-        ? busList.map((bus, index) => `${index + 1}. ${bus.displayBusInfo()}`).join("\n")
-        : "No buses added yet.";
+    const normalizeSearchValue = (value) => String(value ?? "").trim().toLowerCase();
+
+    const matchesSearch = (value, fields) => {
+      const query = normalizeSearchValue(value);
+      if (!query) {
+        return true;
+      }
+
+      return fields.some((field) => String(field ?? "").toLowerCase().includes(query));
     };
 
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        if (!isAdminSession() && tab.dataset.tab !== "travel") {
+          return;
+        }
+
+        tabs.forEach((item) => item.classList.remove("active"));
+        panels.forEach((panel) => panel.classList.remove("active"));
+
+        tab.classList.add("active");
+        document.getElementById(`panel-${tab.dataset.tab}`).classList.add("active");
+
+        if (tab.dataset.tab === "travel" && map) {
+          setTimeout(() => {
+            map.invalidateSize();
+          }, 100);
+        }
+      });
+    });
+
+    searchBusesInput?.addEventListener("input", () => {
+      renderBuses();
+    });
+
+    searchStationsInput?.addEventListener("input", () => {
+      renderStations();
+    });
+
+    searchFuelStationsInput?.addEventListener("input", () => {
+      renderFuelStations();
+    });
+
+    searchTravelPlansInput?.addEventListener("input", () => {
+      renderSavedPlans();
+    });
+
+    function clearBusForm() {
+      document.getElementById("busMake").value = "";
+      document.getElementById("busModel").value = "";
+      document.getElementById("busType").value = "City Bus";
+      document.getElementById("busFuelCapacity").value = "";
+      document.getElementById("busMpg").value = "";
+      document.getElementById("busSpeed").value = "";
+      document.getElementById("busFuelType").value = "unleaded";
+      editingBusIndex = null;
+      document.getElementById("addBusBtn").textContent = "Add Bus";
+    }
+
+    function clearStationForm() {
+      document.getElementById("stationName").value = "";
+      document.getElementById("stationLatitude").value = "";
+      document.getElementById("stationLongitude").value = "";
+      editingStationIndex = null;
+      document.getElementById("addStationBtn").textContent = "Add Station";
+    }
+
+    function clearFuelStationForm() {
+      document.getElementById("fuelStationName").value = "";
+      document.getElementById("fuelStationLatitude").value = "";
+      document.getElementById("fuelStationLongitude").value = "";
+      document.getElementById("fuelGrade").value = "unleaded";
+      editingFuelStationIndex = null;
+      document.getElementById("addFuelStationBtn").textContent = "Add Fuel Station";
+    }
+
+    const renderBuses = () => {
+  const filteredBuses = busList.filter((bus) => matchesSearch(searchBusesInput?.value, [
+    bus.make,
+    bus.model,
+    bus.busType,
+    bus.fuelType,
+  ]));
+
+  if (!filteredBuses.length) {
+    busOutput.textContent = busList.length ? "No buses match your search." : "No buses added yet.";
+    if (!busList.length) {
+    busOutput.textContent = "No buses added yet.";
+        clearBusForm();
+    }
+    return;
+  }
+
+  busOutput.innerHTML = filteredBuses.map((bus) => {
+    const index = busList.indexOf(bus);
+    const actionButtons = isAdminSession()
+      ? `
+      <div class="managed-item__actions">
+        <button type="button" class="edit-btn" data-bus-index="${index}">Edit</button>
+        <button type="button" class="delete-btn" data-bus-index="${index}">Delete</button>
+      </div>
+      `
+      : "";
+    return `
+    <div class="managed-item">
+      <div class="managed-item__content">
+        <strong>${index + 1}. ${bus.make} ${bus.model}</strong><br>
+        Type: ${bus.busType}<br>
+        Tank: ${bus.fuelCapacity} gal | MPG: ${bus.mpg} | Range: ${(bus.fuelCapacity * bus.mpg).toFixed(0)} mi<br>
+        Speed: ${bus.speed} mph | Fuel: ${bus.fuelType}
+      </div>
+      ${actionButtons}
+    </div>
+  `;
+  }).join("");
+
+  busOutput.querySelectorAll("[data-bus-index]").forEach((button) => {
+    const index = Number(button.dataset.busIndex);
+
+    if (button.classList.contains("edit-btn")) {
+      button.addEventListener("click", () => {
+        if (!requireAdminAccess(busOutput)) {
+          return;
+        }
+
+        const bus = busList[index];
+        document.getElementById("busMake").value = bus.make;
+        document.getElementById("busModel").value = bus.model;
+        document.getElementById("busType").value = bus.busType;
+        document.getElementById("busFuelCapacity").value = bus.fuelCapacity;
+        document.getElementById("busMpg").value = bus.mpg;
+        document.getElementById("busSpeed").value = bus.speed;
+        document.getElementById("busFuelType").value = bus.fuelType;
+
+        editingBusIndex = index;
+        document.getElementById("addBusBtn").textContent = "Update Bus";
+      });
+    }
+
+    if (button.classList.contains("delete-btn")) {
+      button.addEventListener("click", () => {
+        if (!requireAdminAccess(busOutput)) {
+          return;
+        }
+
+        busList.splice(index, 1);
+        clearBusForm();
+        renderBuses();
+      });
+    }
+  });
+};
+
     const renderStations = () => {
-      stationOutput.textContent = stationList.length
-        ? stationList.map((station, index) => `${index + 1}. ${station.displayStationInfo()}`).join("\n")
-        : "No stations added yet.";
+      const filteredStations = stationList.filter((station) => matchesSearch(searchStationsInput?.value, [
+        station.name,
+        station.city,
+        station.state,
+      ]));
+
+      if (!filteredStations.length) {
+        stationOutput.textContent = stationList.length ? "No bus stations match your search." : "No stations added yet.";
+      } else {
+        stationOutput.innerHTML = filteredStations.map((station) => {
+          const index = stationList.indexOf(station);
+          const actionButtons = isAdminSession()
+            ? `
+            <div class="managed-item__actions">
+              <button type="button" class="edit-btn" data-station-index="${index}">Edit</button>
+              <button type="button" class="delete-btn" data-station-index="${index}">Delete</button>
+            </div>
+            `
+            : "";
+          return `
+          <div class="managed-item">
+            <div class="managed-item__content">
+              <strong>${escapeHtml(formatStationLabel(station))}</strong><br>
+              ${escapeHtml(station.city && station.state ? `${station.city}, ${station.state}` : "Custom station")}<br>
+              Lat: ${escapeHtml(station.latitude)} | Lng: ${escapeHtml(station.longitude)}
+            </div>
+            ${actionButtons}
+          </div>
+        `;
+        }).join("");
+
+        stationOutput.querySelectorAll("[data-station-index]").forEach((button) => {
+          const index = Number(button.dataset.stationIndex);
+
+          if (button.classList.contains("edit-btn")) {
+            button.addEventListener("click", () => {
+              if (!requireAdminAccess(stationOutput)) {
+                return;
+              }
+
+              const station = stationList[index];
+              document.getElementById("stationName").value = station.name;
+              document.getElementById("stationLatitude").value = station.latitude;
+              document.getElementById("stationLongitude").value = station.longitude;
+              editingStationIndex = index;
+              document.getElementById("addStationBtn").textContent = "Update Station";
+            });
+          }
+
+          if (button.classList.contains("delete-btn")) {
+            button.addEventListener("click", () => {
+              if (!requireAdminAccess(stationOutput)) {
+                return;
+              }
+
+              stationList.splice(index, 1);
+              clearStationForm();
+              renderStations();
+            });
+          }
+        });
+      }
 
       renderSelectOptions(
         travelStartSelect,
@@ -499,9 +895,70 @@
     };
 
     const renderFuelStations = () => {
-      fuelOutput.textContent = fuelStationList.length
-        ? fuelStationList.map((station, index) => `${index + 1}. ${station.displayFuelStationInfo()}`).join("\n")
-        : "No fuel stations added yet.";
+      const filteredFuelStations = fuelStationList.filter((station) => matchesSearch(searchFuelStationsInput?.value, [
+        station.name,
+        station.city,
+        station.state,
+        station.fuelType,
+      ]));
+
+      if (!filteredFuelStations.length) {
+        fuelOutput.textContent = fuelStationList.length ? "No fuel stations match your search." : "No fuel stations added yet.";
+      } else {
+        fuelOutput.innerHTML = filteredFuelStations.map((station) => {
+          const index = fuelStationList.indexOf(station);
+          const actionButtons = isAdminSession()
+            ? `
+            <div class="managed-item__actions">
+              <button type="button" class="edit-btn" data-fuel-index="${index}">Edit</button>
+              <button type="button" class="delete-btn" data-fuel-index="${index}">Delete</button>
+            </div>
+            `
+            : "";
+          return `
+          <div class="managed-item">
+            <div class="managed-item__content">
+              <strong>${escapeHtml(formatFuelStationLabel(station))}</strong><br>
+              ${escapeHtml(station.city && station.state ? `${station.city}, ${station.state}` : "Custom fuel stop")}<br>
+              Fuel: ${escapeHtml(station.fuelType)} | Lat: ${escapeHtml(station.latitude)} | Lng: ${escapeHtml(station.longitude)}
+            </div>
+            ${actionButtons}
+          </div>
+        `;
+        }).join("");
+
+        fuelOutput.querySelectorAll("[data-fuel-index]").forEach((button) => {
+          const index = Number(button.dataset.fuelIndex);
+
+          if (button.classList.contains("edit-btn")) {
+            button.addEventListener("click", () => {
+              if (!requireAdminAccess(fuelOutput)) {
+                return;
+              }
+
+              const station = fuelStationList[index];
+              document.getElementById("fuelStationName").value = station.name;
+              document.getElementById("fuelStationLatitude").value = station.latitude;
+              document.getElementById("fuelStationLongitude").value = station.longitude;
+              document.getElementById("fuelGrade").value = station.fuelType;
+              editingFuelStationIndex = index;
+              document.getElementById("addFuelStationBtn").textContent = "Update Fuel Station";
+            });
+          }
+
+          if (button.classList.contains("delete-btn")) {
+            button.addEventListener("click", () => {
+              if (!requireAdminAccess(fuelOutput)) {
+                return;
+              }
+
+              fuelStationList.splice(index, 1);
+              clearFuelStationForm();
+              renderFuelStations();
+            });
+          }
+        });
+      }
       renderMapMarkers();
     };
 
@@ -757,21 +1214,27 @@ function renderSavedPlans() {
     return;
   }
 
-  const role = auth.getCurrentRole();
+  const role = isAdminSession() ? "admin" : "user";
   const planAccess = getTravelPlanAccess();
 
   const plans = role === "admin"
     ? planAccess.getAllPlansForAdmin()
     : planAccess.getPlansForCurrentUser();
 
-  if (!plans.length) {
+  const filteredPlans = plans.filter((plan) => matchesSearch(searchTravelPlansInput?.value, [
+    role === "admin" ? plan.username : "",
+    plan.startingPoint?.name,
+    plan.destination?.name,
+  ]));
+
+  if (!filteredPlans.length) {
     savedPlansOutput.textContent = role === "admin"
-      ? "No saved travel plans in the system yet."
-      : "You have no saved travel plans yet.";
+      ? (plans.length ? "No saved travel plans match your search." : "No saved travel plans in the system yet.")
+      : (plans.length ? "No saved travel plans match your search." : "You have no saved travel plans yet.");
     return;
   }
 
-  savedPlansOutput.innerHTML = plans.map((plan) => {
+  savedPlansOutput.innerHTML = filteredPlans.map((plan) => {
     const fuelStops = Array.isArray(plan.fuelStops) && plan.fuelStops.length
       ? plan.fuelStops.map((stop) => escapeHtml(stop.name || stop)).join(", ")
       : "None";
@@ -814,6 +1277,12 @@ savedPlansOutput.querySelectorAll(".edit-plan-btn").forEach((button) => {
 
     if (!existingPlan) {
       mapOutput.textContent = "Travel plan not found.";
+      return;
+    }
+
+    const currentUser = auth.getCurrentUser();
+    if (!isAdminSession() && existingPlan.username !== currentUser) {
+      travelOutput.textContent = "You can only edit your own travel plans.";
       return;
     }
 
@@ -904,7 +1373,22 @@ savedPlansOutput.querySelectorAll(".delete-plan-btn").forEach((button) => {
     };
 
     proceedBtn.addEventListener("click", () => {
-      showLoginForm();
+      disclaimerView.classList.add("hidden");
+      introScreen.classList.remove("hidden");
+
+      requestAnimationFrame(() => {
+        introScreen.classList.add("show");
+      });
+
+      setTimeout(() => {
+        introScreen.classList.add("fade-out");
+      }, 2500);
+
+      setTimeout(() => {
+        introScreen.classList.remove("show", "fade-out");
+        introScreen.classList.add("hidden");
+        showLoginForm();
+      }, 3100);
     });
 
     createBtn.addEventListener("click", () => {
@@ -963,7 +1447,7 @@ savedPlansOutput.querySelectorAll(".delete-plan-btn").forEach((button) => {
   showMessage(result.message, result.success ? "ok" : "error");
 
   if (result.success) {
-    syncAuthUI();
+    runPostLoginTransition();
   }
 });
 
@@ -982,6 +1466,10 @@ savedPlansOutput.querySelectorAll(".delete-plan-btn").forEach((button) => {
     });
 
     document.getElementById("addBusBtn").addEventListener("click", () => {
+      if (!requireAdminAccess(busOutput)) {
+        return;
+      }
+
       const make = document.getElementById("busMake").value.trim();
       const model = document.getElementById("busModel").value.trim();
       const busType = document.getElementById("busType").value;
@@ -995,26 +1483,47 @@ savedPlansOutput.querySelectorAll(".delete-plan-btn").forEach((button) => {
         return;
       }
 
-      const bus = new Bus(make, model, busType, fuelCapacity, mpg, speed, fuelType);
-      bus.addBus(busList);
+      if (editingBusIndex !== null) {
+        busList[editingBusIndex].modifyBus({ make, model, busType, fuelCapacity, mpg, speed, fuelType });
+        clearBusForm();
+      } else {
+        const bus = new Bus(make, model, busType, fuelCapacity, mpg, speed, fuelType);
+        bus.addBus(busList);
+      }
+
       renderBuses();
     });
 
     document.getElementById("addStationBtn").addEventListener("click", () => {
+      if (!requireAdminAccess(stationOutput)) {
+        return;
+      }
+
       const name = document.getElementById("stationName").value.trim();
       const latitude = Number(document.getElementById("stationLatitude").value);
       const longitude = Number(document.getElementById("stationLongitude").value);
       const station = new BusStation(name, "", "", latitude, longitude);
 
-      if (!station.addStation(stationList)) {
+      if (!station.validateBusStationInput()) {
         stationOutput.textContent = "Station must have a 3-60 character name, latitude between -90 and 90, and longitude between -180 and 180.";
         return;
+      }
+
+      if (editingStationIndex !== null) {
+        stationList.splice(editingStationIndex, 1, station);
+        clearStationForm();
+      } else {
+        station.addStation(stationList);
       }
 
       renderStations();
     });
 
     document.getElementById("addFuelStationBtn").addEventListener("click", () => {
+      if (!requireAdminAccess(fuelOutput)) {
+        return;
+      }
+
       const name = document.getElementById("fuelStationName").value.trim();
       const latitude = Number(document.getElementById("fuelStationLatitude").value);
       const longitude = Number(document.getElementById("fuelStationLongitude").value);
@@ -1026,7 +1535,14 @@ savedPlansOutput.querySelectorAll(".delete-plan-btn").forEach((button) => {
       }
 
       const fuelStation = new FuelStation(name, "", "", latitude, longitude, selectedGrade);
-      fuelStationList.push(fuelStation);
+
+      if (editingFuelStationIndex !== null) {
+        fuelStationList.splice(editingFuelStationIndex, 1, fuelStation);
+        clearFuelStationForm();
+      } else {
+        fuelStationList.push(fuelStation);
+      }
+
       renderFuelStations();
     });
 
