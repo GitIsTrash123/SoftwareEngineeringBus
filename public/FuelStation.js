@@ -1,3 +1,4 @@
+// Represents a compatible fuel stop that can be suggested during route planning.
 export default class FuelStation {
   constructor(name, cityOrLatitude, stateOrLongitude, latitudeOrFuelType, longitude, fuelType) {
     this.name = name;

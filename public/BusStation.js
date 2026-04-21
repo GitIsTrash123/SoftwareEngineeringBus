@@ -1,3 +1,4 @@
+// Represents a travel origin/destination option shown in the planning UI.
 export default class BusStation {
   constructor(name, cityOrLatitude, stateOrLongitude, latitude, longitude) {
     this.name = name;

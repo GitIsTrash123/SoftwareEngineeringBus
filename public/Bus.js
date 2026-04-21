@@ -1,3 +1,4 @@
+// Represents an available vehicle in the in-memory fleet list used by the UI.
 export default class Bus {
   constructor(make, model, busType, fuelCapacity, mpg, speed, fuelType) {
     this.make = make;
