@@ -66,6 +66,27 @@ export default class TravelPlan {
     };
   }
 
+  serializeStop(stop) {
+    if (!stop) {
+      return null;
+    }
+
+    const coordinates = stop.coordinates || stop;
+
+    return {
+      id: stop.id || "",
+      order: Number.isFinite(stop.order) ? stop.order : 0,
+      name: stop.name || stop.locationName || "",
+      city: stop.city || "",
+      state: stop.state || "",
+      latitude: Number(coordinates.latitude || 0),
+      longitude: Number(coordinates.longitude || 0),
+      stopType: stop.stopType || stop.type || "sightseeing",
+      duration: Number(stop.duration || 0),
+      notes: stop.notes || ""
+    };
+  }
+
   sanitizeForFirestore(value) {
     if (value === null) {
       return null;
@@ -132,6 +153,9 @@ export default class TravelPlan {
       destination: this.serializeStation(normalized.destination),
       bus: this.serializeBus(normalized.bus),
       fuelStation: this.serializeFuelStop(normalized.fuelStation),
+      stops: Array.isArray(normalized.stops)
+        ? normalized.stops.map((stop) => this.serializeStop(stop)).filter(Boolean)
+        : [],
       fuelStops: Array.isArray(normalized.fuelStops)
         ? normalized.fuelStops.map((stop) => this.serializeFuelStop(stop)).filter(Boolean)
         : [],
@@ -203,11 +227,25 @@ export default class TravelPlan {
   }
 
   buildFallbackSegments(plan = {}) {
+    const travelStops = Array.isArray(plan.stops) ? plan.stops : [];
     const fuelStops = Array.isArray(plan.fuelStops) ? plan.fuelStops : [];
-    const stops = fuelStops.map((stop, index) => this.normalizeStop({
+    const normalizedTravelStops = travelStops.map((stop, index) => this.normalizeStop({
       ...stop,
-      id: `segment-1-stop-${index + 1}`,
+      id: stop.id || `segment-1-stop-${index + 1}`,
       order: index + 1,
+      stopType: stop.stopType || "sightseeing",
+      duration: stop.duration || 0,
+      notes: stop.notes || "User-selected route stop",
+      coordinates: {
+        latitude: stop.latitude ?? stop.coordinates?.latitude,
+        longitude: stop.longitude ?? stop.coordinates?.longitude
+      },
+      name: stop.name || stop.locationName || ""
+    }, index));
+    const normalizedFuelStops = fuelStops.map((stop, index) => this.normalizeStop({
+      ...stop,
+      id: `segment-1-fuel-stop-${index + 1}`,
+      order: normalizedTravelStops.length + index + 1,
       stopType: "fuel",
       duration: stop.duration || 0,
       notes: stop.notes || "Auto-selected fuel stop",
@@ -217,6 +255,7 @@ export default class TravelPlan {
       },
       name: stop.name || ""
     }, index));
+    const stops = [...normalizedTravelStops, ...normalizedFuelStops];
 
     return [this.normalizeSegment({
       id: "segment-1",
@@ -248,6 +287,9 @@ export default class TravelPlan {
     const busChangeCount = typeof plan.busChangeCount === "number"
       ? plan.busChangeCount
       : segments.filter((segment) => segment.busChange).length;
+    const normalizedStops = Array.isArray(plan.stops) && plan.stops.length
+      ? plan.stops.map((stop, index) => this.normalizeStop(stop, index))
+      : segments.flatMap((segment) => segment.stops.filter((stop) => stop.stopType !== "fuel"));
 
     return {
       ...plan,
@@ -257,6 +299,7 @@ export default class TravelPlan {
       segmentCount: typeof plan.segmentCount === "number" ? plan.segmentCount : segmentCount,
       busChangeCount,
       sightseeingStopCount,
+      stops: normalizedStops,
       segments,
       needsFuelStop: typeof plan.needsFuelStop === "boolean"
         ? plan.needsFuelStop
@@ -270,6 +313,7 @@ export default class TravelPlan {
   // =========================
 
   calculateDistance() {
+    // Convert degrees to radians before applying Haversine distance math.
     const toRad = (deg) => deg * (Math.PI / 180);
     const R = 3958.8;
 
@@ -285,6 +329,7 @@ export default class TravelPlan {
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
 
+    // Great-circle distance in miles = Earth radius * central angle.
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return Number((R * c).toFixed(2));
@@ -294,6 +339,7 @@ export default class TravelPlan {
     if (!this.bus || !this.bus.speed || this.bus.speed <= 0) {
       return 0;
     }
+    // Travel time in hours = route distance (mi) / bus speed (mi/hr).
     return Number((this.distance / this.bus.speed).toFixed(2));
   }
 
@@ -302,6 +348,7 @@ export default class TravelPlan {
       return false;
     }
 
+    // Estimated reachable miles = tank size (gal) * fuel efficiency (mi/gal).
     const estimatedRange = this.bus.fuelCapacity * this.bus.mpg;
     return estimatedRange >= this.distance;
   }
@@ -334,6 +381,7 @@ export default class TravelPlan {
     const currentRole = localStorage.getItem("currentRole") || "user";
     const currentAuthUser = firebaseAuth.currentUser;
     const currentUserId = currentAuthUser ? currentAuthUser.uid : null;
+    // Persist the same range formula used in fuel-capacity checks.
     const estimatedRange = this.bus.fuelCapacity * this.bus.mpg;
 
     return this.normalizePlanRecord({
@@ -356,6 +404,7 @@ export default class TravelPlan {
       segmentCount: 1,
       busChangeCount: 0,
       sightseeingStopCount: 0,
+      stops: [],
       fuelStops: [],
       segments: []
     });
@@ -560,17 +609,23 @@ export default class TravelPlan {
     const currentRole = localStorage.getItem("currentRole");
     const currentAuthUser = firebaseAuth.currentUser;
 
-    const plans = await this.getSavedPlans();
-    const foundPlan = plans.find((plan) => plan.id === planId);
+    console.log("[deletePlan] planId:", planId);
 
-    if (!foundPlan) {
+    const planRef = doc(firestoreDb, firebaseCollections.travelPlans, planId);
+    const snapshot = await getDoc(planRef);
+
+    console.log("[deletePlan] snapshot exists:", snapshot.exists());
+
+    if (!snapshot.exists()) {
       return {
         success: false,
         message: "Travel plan not found."
       };
     }
 
-    if (currentRole !== "admin" && (!currentAuthUser || foundPlan.userId !== currentAuthUser.uid)) {
+    const existingPlan = snapshot.data();
+
+    if (currentRole !== "admin" && (!currentAuthUser || existingPlan.userId !== currentAuthUser.uid)) {
       return {
         success: false,
         message: "You can only delete your own travel plans."
@@ -578,13 +633,15 @@ export default class TravelPlan {
     }
 
     try {
-      await deleteDoc(doc(firestoreDb, firebaseCollections.travelPlans, planId));
+      await deleteDoc(planRef);
+      console.log("[deletePlan] deleted successfully:", planId);
 
       return {
         success: true,
         message: "Travel plan deleted successfully."
       };
-    } catch (_error) {
+    } catch (error) {
+      console.error("[deletePlan] error:", error.code, error.message);
       return {
         success: false,
         message: "Unable to delete travel plan right now. Please try again."

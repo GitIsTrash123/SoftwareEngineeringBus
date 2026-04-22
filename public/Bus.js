@@ -11,6 +11,7 @@ export default class Bus {
   }
 
   busString() {
+    // Estimated range in miles = fuel tank capacity (gal) * efficiency (mi/gal).
     const range = (this.fuelCapacity * this.mpg).toFixed(0);
     return `${this.make} ${this.model} | Type: ${this.busType} | Tank: ${this.fuelCapacity} gal | MPG: ${this.mpg} | Range: ~${range} mi | Speed: ${this.speed} mph | Fuel: ${this.fuelType}`;
   }

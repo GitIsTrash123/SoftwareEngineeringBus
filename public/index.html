@@ -263,6 +263,12 @@
 
                 <label for="travelDestination">Destination</label>
                 <select id="travelDestination"></select>
+
+                <div class="field-group">
+                  <label>Stops</label>
+                  <div id="travelStopsContainer"></div>
+                  <button id="addStopBtn" type="button" class="secondary-btn">Add Stop</button>
+                </div>
                 <button id="createTravelPlanBtn" type="button">Create Travel Plan</button>
                 <button id="cancelEditTravelPlanBtn" type="button" class="hidden">Cancel Edit</button>
               </div>
@@ -338,6 +344,8 @@
     const searchTravelPlansInput = document.getElementById("searchTravelPlans");
     const createTravelPlanBtn = document.getElementById("createTravelPlanBtn");
     const cancelEditTravelPlanBtn = document.getElementById("cancelEditTravelPlanBtn");
+    const addStopBtn = document.getElementById("addStopBtn");
+    const travelStopsContainer = document.getElementById("travelStopsContainer");
     const backToLoginBtn = document.getElementById("backToLoginBtn");
     const exitBtn = document.getElementById("exitBtn");
     const usernameInput = document.getElementById("username");
@@ -361,6 +369,7 @@
     let editingStationIndex = null;
     let editingFuelStationIndex = null;
     let editingTravelPlanId = null;
+    let selectedStops = [];
 
     // --- Seeded buses (representative real-world models; specs are representative) ---
     [
@@ -663,6 +672,166 @@
       return `${cityPrefix}${station.name}`;
     };
 
+    // =========================
+    // Travel Stop Form Helpers
+    // =========================
+
+    function createEmptyStop() {
+      return {
+        id: `stop-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+        order: selectedStops.length + 1,
+        name: "",
+        city: "",
+        state: "",
+        latitude: 0,
+        longitude: 0,
+        stopType: "sightseeing",
+      };
+    }
+
+    function createStopFromStation(station, index) {
+      return {
+        id: station.id || `stop-${Date.now()}-${index + 1}`,
+        order: Number.isFinite(station.order) ? station.order : index + 1,
+        name: station.name || "",
+        city: station.city || "",
+        state: station.state || "",
+        latitude: Number(station.latitude || station.coordinates?.latitude || 0),
+        longitude: Number(station.longitude || station.coordinates?.longitude || 0),
+        stopType: station.stopType || "sightseeing",
+      };
+    }
+
+    function reindexSelectedStops() {
+      selectedStops = selectedStops.map((stop, index) => ({
+        ...stop,
+        order: index + 1,
+      }));
+    }
+
+    function renderStopInputs() {
+      if (!travelStopsContainer) {
+        return;
+      }
+
+      if (!selectedStops.length) {
+        travelStopsContainer.innerHTML = '<div>No stops added.</div>';
+        return;
+      }
+
+      travelStopsContainer.innerHTML = selectedStops.map((stop) => {
+        const selectedStationIndex = stationList.findIndex((station) =>
+          station.name === stop.name &&
+          Number(station.latitude) === Number(stop.latitude) &&
+          Number(station.longitude) === Number(stop.longitude)
+        );
+
+        const options = stationList.map((station, index) => {
+          const isSelected = selectedStationIndex === index ? " selected" : "";
+          return `<option value="${index}"${isSelected}>${escapeHtml(formatStationLabel(station))}</option>`;
+        }).join("");
+
+        return `
+          <div class="stop-row" data-stop-id="${escapeHtml(stop.id)}">
+            <select class="stop-select" data-stop-id="${escapeHtml(stop.id)}">
+              <option value="">Select stop ${stop.order}</option>
+              ${options}
+            </select>
+            <button type="button" class="delete-btn remove-stop-btn" data-stop-id="${escapeHtml(stop.id)}">Remove</button>
+          </div>
+        `;
+      }).join("");
+
+      travelStopsContainer.querySelectorAll(".stop-select").forEach((selectElement) => {
+        selectElement.addEventListener("change", (event) => {
+          const stopId = event.currentTarget.dataset.stopId;
+          updateStopFromSelect(stopId, event.currentTarget.value);
+        });
+      });
+
+      travelStopsContainer.querySelectorAll(".remove-stop-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          removeStopInput(button.dataset.stopId);
+        });
+      });
+    }
+
+    function addStopInput() {
+      selectedStops.push(createEmptyStop());
+      reindexSelectedStops();
+      renderStopInputs();
+    }
+
+    function removeStopInput(stopId) {
+      selectedStops = selectedStops.filter((stop) => stop.id !== stopId);
+      reindexSelectedStops();
+      renderStopInputs();
+    }
+
+    function updateStopFromSelect(stopId, stationIndex) {
+      const stop = selectedStops.find((entry) => entry.id === stopId);
+      if (!stop) {
+        return;
+      }
+
+      if (stationIndex === "") {
+        stop.name = "";
+        stop.city = "";
+        stop.state = "";
+        stop.latitude = 0;
+        stop.longitude = 0;
+        stop.stopType = "sightseeing";
+        return;
+      }
+
+      const station = stationList[Number(stationIndex)];
+      if (!station) {
+        return;
+      }
+
+      stop.name = station.name;
+      stop.city = station.city || "";
+      stop.state = station.state || "";
+      stop.latitude = Number(station.latitude || 0);
+      stop.longitude = Number(station.longitude || 0);
+      stop.stopType = "sightseeing";
+    }
+
+    function resetStopInputs() {
+      selectedStops = [];
+      renderStopInputs();
+    }
+
+    function loadStopsIntoEditor(stops = []) {
+      if (!Array.isArray(stops) || !stops.length) {
+        resetStopInputs();
+        return;
+      }
+
+      selectedStops = stops
+        .map((stop, index) => createStopFromStation(stop, index))
+        .sort((firstStop, secondStop) => firstStop.order - secondStop.order);
+
+      reindexSelectedStops();
+      renderStopInputs();
+    }
+
+    function resolveStoredStops(plan) {
+      if (Array.isArray(plan?.stops) && plan.stops.length) {
+        return plan.stops.map((stop, index) => createStopFromStation(stop, index));
+      }
+
+      if (Array.isArray(plan?.segments) && plan.segments.length) {
+        const segmentStops = plan.segments
+          .flatMap((segment) => Array.isArray(segment.stops) ? segment.stops : [])
+          .filter((stop) => (stop?.stopType || "") !== "fuel");
+
+        return segmentStops.map((stop, index) => createStopFromStation(stop, index));
+      }
+
+      return [];
+    }
+
     const normalizeSearchValue = (value) => String(value ?? "").trim().toLowerCase();
 
     const matchesSearch = (value, fields) => {
@@ -708,6 +877,10 @@
 
     searchTravelPlansInput?.addEventListener("input", () => {
       renderSavedPlans();
+    });
+
+    addStopBtn?.addEventListener("click", () => {
+      addStopInput();
     });
 
     function clearBusForm() {
@@ -893,6 +1066,7 @@
         formatStationLabel,
         stationList.length ? "Select a destination" : "Add stations first"
       );
+      renderStopInputs();
       renderMapMarkers();
     };
 
@@ -1119,15 +1293,38 @@
       }, null)?.station || null;
     }
 
-    function findBestFuelStops(startingPoint, destination, bus, fuelStations, distance) {
+    function calculateRouteDistanceMiles(routePoints) {
+      if (!Array.isArray(routePoints) || routePoints.length < 2) {
+        return 0;
+      }
+
+      return routePoints.reduce((sum, point, index) => {
+        if (index === routePoints.length - 1) {
+          return sum;
+        }
+
+        return sum + haversineMiles(point, routePoints[index + 1]);
+      }, 0);
+    }
+
+    function buildOrderedRoutePoints(startingPoint, stops, destination) {
+      const normalizedStops = Array.isArray(stops)
+        ? stops.filter((stop) => stop && Number.isFinite(stop.latitude) && Number.isFinite(stop.longitude))
+        : [];
+
+      return [startingPoint, ...normalizedStops, destination].filter(Boolean);
+    }
+
+    function findBestFuelStops(routePoints, bus, fuelStations, distance) {
       const safeRangeMiles = getBusRange(bus) * 0.85;
 
-      if (distance <= safeRangeMiles) {
+      if (!Array.isArray(routePoints) || routePoints.length < 2 || distance <= safeRangeMiles) {
         return [];
       }
 
+      const startingPoint = routePoints[0];
+      const destination = routePoints[routePoints.length - 1];
       const stopCount = Math.ceil(distance / safeRangeMiles) - 1;
-      const routePoints = [startingPoint, destination];
       const usedStationNames = new Set();
       const fuelStops = [];
 
@@ -1203,13 +1400,9 @@
       if (bounds.length >= 2) map.fitBounds(bounds, { padding: [30, 30] });
     }
 
-    function drawStraightRoute(startingPoint, fuelStops, destination) {
+    function drawStraightRoute(orderedPoints) {
       clearRoutes();
-      const coords = [[startingPoint.latitude, startingPoint.longitude]];
-      fuelStops.forEach((fuelStop) => {
-        coords.push([fuelStop.latitude, fuelStop.longitude]);
-      });
-      coords.push([destination.latitude, destination.longitude]);
+      const coords = orderedPoints.map((point) => [point.latitude, point.longitude]);
       // Leaflet polyline draws a straight-line preview route between waypoints.
       routeLayer = L.polyline(coords, { color: "#1f6feb", weight: 3, dashArray: "8 6" }).addTo(map);
       // Fit map to the route overlay so users immediately see the full trip.
@@ -1254,6 +1447,10 @@
       createTravelPlanBtn.textContent = planId ? "Save Changes" : "Create Travel Plan";
       if (cancelEditTravelPlanBtn) {
         cancelEditTravelPlanBtn.classList.toggle("hidden", !planId);
+      }
+
+      if (!planId) {
+        resetStopInputs();
       }
     }
 
@@ -1304,6 +1501,9 @@
       if (destinationIndex >= 0) {
         travelDestinationSelect.value = String(destinationIndex);
       }
+
+      const storedStops = resolveStoredStops(existingPlan);
+      loadStopsIntoEditor(storedStops);
     }
 
     async function showSavedPlanRoute(plan, mode) {
@@ -1312,21 +1512,22 @@
         return;
       }
 
-      const savedFuelStops = resolveStoredFuelStops(plan);
+      const savedStops = resolveStoredStops(plan);
+      const orderedPoints = buildOrderedRoutePoints(plan.startingPoint, savedStops, plan.destination);
 
       try {
         if (mode === "road") {
-          const roadResult = await drawRoadRoute(plan.startingPoint, plan.destination, savedFuelStops);
+          const roadResult = await drawRoadRoute(orderedPoints);
           mapOutput.textContent = `Road route loaded for saved plan (${roadResult.miles.toFixed(2)} miles).`;
         } else {
-          const miles = drawStraightRoute(plan.startingPoint, savedFuelStops, plan.destination);
+          const miles = drawStraightRoute(orderedPoints);
           mapOutput.textContent = `Straight route loaded for saved plan (${miles.toFixed(2)} miles).`;
         }
 
         travelOutput.textContent = `Viewing ${mode} route for saved plan: ${plan.startingPoint?.name || "Unknown"} to ${plan.destination?.name || "Unknown"}.`;
       } catch (_error) {
         if (mode === "road") {
-          const miles = drawStraightRoute(plan.startingPoint, savedFuelStops, plan.destination);
+          const miles = drawStraightRoute(orderedPoints);
           mapOutput.textContent = `Road route unavailable. Straight route preview used instead (${miles.toFixed(2)} miles).`;
           travelOutput.textContent = `Viewing straight route for saved plan: ${plan.startingPoint?.name || "Unknown"} to ${plan.destination?.name || "Unknown"}.`;
           return;
@@ -1434,6 +1635,10 @@
           const fuelStops = Array.isArray(plan.fuelStops) && plan.fuelStops.length
             ? plan.fuelStops.map((stop) => escapeHtml(stop.name || stop)).join(", ")
             : "None";
+          const travelStops = resolveStoredStops(plan);
+          const stopNames = travelStops.length
+            ? travelStops.map((stop) => escapeHtml(stop.name || `Stop ${stop.order}`)).join(", ")
+            : "None";
 
           const ownerLine = role === "admin"
             ? `<div><strong>User:</strong> ${escapeHtml(plan.username)}</div>`
@@ -1451,6 +1656,7 @@
               <div><strong>Trip Class:</strong> ${escapeHtml(plan.tripClass || "short")}</div>
               <div><strong>Distance:</strong> ${escapeHtml(plan.distance)} miles</div>
               <div><strong>Estimated Time:</strong> ${escapeHtml(formatTravelTime(plan.time))}</div>
+              <div><strong>Stops:</strong> ${stopNames}</div>
               <div><strong>Fuel Stops:</strong> ${fuelStops}</div>
               <div class="saved-plan-actions">
                 <button type="button" class="show-straight-route-btn" data-plan-id="${escapeHtml(plan.id)}">
@@ -1476,14 +1682,10 @@
       }
     }
 
-    const drawRoadRoute = async (start, destination, fuelStop = null) => {
+    const drawRoadRoute = async (orderedPoints) => {
       clearRoutes();
 
-      const normalizedFuelStops = Array.isArray(fuelStop)
-        ? fuelStop
-        : (fuelStop ? [fuelStop] : []);
-
-      const points = [start, ...normalizedFuelStops, destination];
+      const points = [...orderedPoints];
       const coords = points
         .map((point) => `${point.longitude},${point.latitude}`)
         .join(";");
@@ -1746,8 +1948,9 @@
 
   const startingPoint = stationList[Number(startIndex)];
   const destination = stationList[Number(destinationIndex)];
-  const planningTrip = new TravelPlan(startingPoint, destination, busList[0] || null, null);
-  const planningDistance = Number(planningTrip.distance);
+  const validSelectedStops = selectedStops.filter((stop) => stop.name && Number.isFinite(stop.latitude) && Number.isFinite(stop.longitude));
+  const orderedPoints = buildOrderedRoutePoints(startingPoint, validSelectedStops, destination);
+  const planningDistance = Number(calculateRouteDistanceMiles(orderedPoints).toFixed(2));
   const selectedBus = selectBestBus(planningDistance, busList);
 
   if (!selectedBus) {
@@ -1755,15 +1958,9 @@
     return;
   }
 
-  const selectedFuelStops = findBestFuelStops(
-    startingPoint,
-    destination,
-    selectedBus,
-    fuelStationList,
-    planningDistance
-  );
+  const selectedFuelStops = findBestFuelStops(orderedPoints, selectedBus, fuelStationList, planningDistance);
 
-  const miles = drawStraightRoute(startingPoint, selectedFuelStops, destination);
+  const miles = drawStraightRoute(orderedPoints);
   const hours = selectedBus.speed > 0 ? miles / selectedBus.speed : 0;
   const direction = getOverallDirection(startingPoint, destination);
   const tripClass = classifyTrip(miles);
@@ -1771,15 +1968,34 @@
   const normalizedDistance = Number(miles.toFixed(2));
   const normalizedTime = Number(hours.toFixed(2));
   const needsFuelStop = selectedFuelStops.length > 0;
+  const stopCount = validSelectedStops.length;
 
-  mapOutput.textContent = `Straight route preview drawn with ${selectedFuelStops.length} fuel stop${selectedFuelStops.length === 1 ? "" : "s"}. Use saved plan buttons to switch route view mode.`;
+  mapOutput.textContent = `Straight route preview drawn with ${stopCount} stop${stopCount === 1 ? "" : "s"} and ${selectedFuelStops.length} fuel stop${selectedFuelStops.length === 1 ? "" : "s"}. Use saved plan buttons to switch route view mode.`;
 
-  const stopNames = selectedFuelStops.length
+  const stopNames = validSelectedStops.length
+    ? validSelectedStops.map((stop) => stop.name).join(", ")
+    : "None";
+
+  const fuelStopNames = selectedFuelStops.length
     ? selectedFuelStops.map((station) => formatFuelStationLabel(station)).join(", ")
     : "None";
-  const segmentStops = selectedFuelStops.map((station, index) => ({
-    id: `segment-1-stop-${index + 1}`,
+  const travelSegmentStops = validSelectedStops.map((stop, index) => ({
+    id: stop.id || `segment-1-stop-${index + 1}`,
     order: index + 1,
+    stopType: stop.stopType || "sightseeing",
+    duration: 0,
+    notes: "User-selected route stop",
+    coordinates: {
+      latitude: stop.latitude,
+      longitude: stop.longitude,
+    },
+    name: stop.name,
+    city: stop.city || "",
+    state: stop.state || "",
+  }));
+  const fuelSegmentStops = selectedFuelStops.map((station, index) => ({
+    id: `segment-1-fuel-stop-${index + 1}`,
+    order: travelSegmentStops.length + index + 1,
     stopType: "fuel",
     duration: 0,
     notes: "Auto-selected fuel stop",
@@ -1789,6 +2005,7 @@
     },
     name: formatFuelStationLabel(station),
   }));
+  const segmentStops = [...travelSegmentStops, ...fuelSegmentStops];
   const segments = [{
     id: "segment-1",
     order: 1,
@@ -1808,7 +2025,7 @@
     `Automatic bus selection: ${selectedBus.make} ${selectedBus.model} (${selectedBus.busType}) | Range: ~${estimatedRange.toFixed(0)} miles | Fuel: ${selectedBus.fuelType}`;
 
   autoFuelOutput.textContent = selectedFuelStops.length
-    ? `Automatic fuel stops: ${stopNames}`
+    ? `Automatic fuel stops: ${fuelStopNames}`
     : "Automatic fuel stops: None needed for this trip.";
 
   const completedPlan = new TravelPlan(
@@ -1827,13 +2044,15 @@
     `Trip class: ${tripClass}\n` +
     `Distance: ${miles.toFixed(2)} miles\n` +
     `Estimated time: ${formatTravelTime(hours)}\n` +
-    `Fuel stops: ${stopNames}`;
+    `Stops (${stopCount}): ${stopNames}\n` +
+    `Fuel stops: ${fuelStopNames}`;
 
   const planPayload = {
     startingPoint,
     destination,
     bus: selectedBus,
     fuelStation: selectedFuelStops[0] || null,
+    stops: validSelectedStops,
     fuelStops: selectedFuelStops,
     distance: normalizedDistance,
     time: normalizedTime,
@@ -1843,7 +2062,7 @@
     overallDirection: direction,
     segmentCount: segments.length,
     busChangeCount: 0,
-    sightseeingStopCount: 0,
+    sightseeingStopCount: stopCount,
     segments,
     summary: planSummary,
   };
@@ -1864,7 +2083,8 @@
     `Distance: ${miles.toFixed(2)} miles\n` +
     `Estimated time: ${formatTravelTime(hours)}\n` +
     `Estimated bus range: ${estimatedRange.toFixed(0)} miles\n` +
-    `Fuel stops: ${stopNames}\n` +
+    `Stops (${stopCount}): ${stopNames}\n` +
+    `Fuel stops: ${fuelStopNames}\n` +
     `Status: ${editingTravelPlanId ? "Travel plan updated successfully." : "Travel plan saved successfully."}`;
 
   setTravelPlanEditingState(null);
@@ -1878,6 +2098,8 @@ if (cancelEditTravelPlanBtn) {
     travelOutput.textContent = "Edit canceled. Create a new travel plan or select a saved plan to edit.";
   });
 }
+
+    renderStopInputs();
 
     renderBuses();
     renderStations();

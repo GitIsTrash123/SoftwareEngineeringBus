@@ -26,6 +26,7 @@ export default class FuelStation {
   }
 
   refuelBus(bus) {
+    // Fuel stop eligibility is a strict match; range arithmetic is computed in TravelPlan.
     if (this.fuelType === bus.fuelType) {
       return `Fuel matched. ${bus.make} ${bus.model} restored to full tank.`;
     }

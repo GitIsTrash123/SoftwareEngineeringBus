@@ -55,11 +55,13 @@ export default class BusStation {
       this.name.trim().length >= 3 &&
       this.name.trim().length <= 60;
 
+    // Latitude is measured on a sphere from -90 to +90 degrees.
     const validLatitude =
       typeof this.latitude === "number" &&
       this.latitude >= -90 &&
       this.latitude <= 90;
 
+    // Longitude wraps around Earth from -180 to +180 degrees.
     const validLongitude =
       typeof this.longitude === "number" &&
       this.longitude >= -180 &&
